@@ -1,0 +1,383 @@
+   1               		.file	"timer.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	__vector_9
+  13               	__vector_9:
+  14               	.LFB4:
+  15               		.file 1 "timer.c"
+   1:timer.c       ****  
+   2:timer.c       ****  
+   3:timer.c       **** #include "config.h"
+   4:timer.c       **** 
+   5:timer.c       **** #include <stdlib.h>
+   6:timer.c       **** #include <stdint.h>
+   7:timer.c       **** #include <avr/io.h>
+   8:timer.c       **** #include <avr/interrupt.h>
+   9:timer.c       **** #include "timer.h"
+  10:timer.c       **** 
+  11:timer.c       **** #include "gear-indicator.h"
+  12:timer.c       **** 
+  13:timer.c       **** 
+  14:timer.c       **** /*! Protect the time-sync */
+  15:timer.c       **** #define LOCK()		/* ISR */
+  16:timer.c       **** /*! Release the time-sync lock */
+  17:timer.c       **** #define UNLOCK()	/* ISR */
+  18:timer.c       **** 
+  19:timer.c       **** volatile tickCount_t tickCount;		/*!< one Tick every 176 us */
+  20:timer.c       **** 
+  21:timer.c       **** 
+  22:timer.c       **** #ifdef TIME_AVAILABLE
+  23:timer.c       **** /*!
+  24:timer.c       ****  * This function returnes the system time in parts of milliseconds.
+  25:timer.c       ****  * @return	Milliseconds of system time
+  26:timer.c       ****  */
+  27:timer.c       **** uint16_t timer_get_ms(void)
+  28:timer.c       **** {
+  29:timer.c       **** 	return ((TIMER_GET_TICKCOUNT_32*(TIMER_STEPS/8))/(1000/8))%1000;
+  30:timer.c       **** }
+  31:timer.c       **** 
+  32:timer.c       **** /*!
+  33:timer.c       ****  * This function returnes the system time in parts of seconds.
+  34:timer.c       ****  * @return 	Seconds of system time
+  35:timer.c       ****  */
+  36:timer.c       **** uint16_t timer_get_s(void)
+  37:timer.c       **** {
+  38:timer.c       **** 	return TIMER_GET_TICKCOUNT_32*(TIMER_STEPS/16)/(1000000/16);
+  39:timer.c       **** }
+  40:timer.c       **** 
+  41:timer.c       **** /*!
+  42:timer.c       ****  * Returns seconds passed since old_s, old_ms
+  43:timer.c       ****  * @param old_s		old value for the seconds
+  44:timer.c       ****  * @param old_ms	old value for the milliseconds
+  45:timer.c       ****  */
+  46:timer.c       **** uint16_t timer_get_ms_since(uint16_t old_s, uint16_t old_ms)
+  47:timer.c       **** {
+  48:timer.c       **** 	return (timer_get_s()-old_s)*1000 + timer_get_ms()-old_ms;
+  49:timer.c       **** }
+  50:timer.c       **** #endif // TIME_AVAILABLE
+  51:timer.c       **** 
+  52:timer.c       **** 
+  53:timer.c       **** // ---- Timer 2 ------
+  54:timer.c       **** 
+  55:timer.c       **** /*!
+  56:timer.c       ****  Interrupt Handler for Timer/Counter 2
+  57:timer.c       ****  */
+  58:timer.c       **** 
+  59:timer.c       **** ISR(TIMER2_COMP_vect)
+  60:timer.c       **** {
+  16               		.loc 1 60 0
+  17               		.cfi_startproc
+  18 0000 1F92      		push r1
+  19               	.LCFI0:
+  20               		.cfi_def_cfa_offset 3
+  21               		.cfi_offset 1, -2
+  22 0002 0F92      		push r0
+  23               	.LCFI1:
+  24               		.cfi_def_cfa_offset 4
+  25               		.cfi_offset 0, -3
+  26 0004 0FB6      		in r0,__SREG__
+  27 0006 0F92      		push r0
+  28 0008 1124      		clr __zero_reg__
+  29 000a 0BB6      		in r0,__RAMPZ__
+  30 000c 0F92      		push r0
+  31 000e 2F93      		push r18
+  32               	.LCFI2:
+  33               		.cfi_def_cfa_offset 5
+  34               		.cfi_offset 18, -4
+  35 0010 3F93      		push r19
+  36               	.LCFI3:
+  37               		.cfi_def_cfa_offset 6
+  38               		.cfi_offset 19, -5
+  39 0012 4F93      		push r20
+  40               	.LCFI4:
+  41               		.cfi_def_cfa_offset 7
+  42               		.cfi_offset 20, -6
+  43 0014 5F93      		push r21
+  44               	.LCFI5:
+  45               		.cfi_def_cfa_offset 8
+  46               		.cfi_offset 21, -7
+  47 0016 6F93      		push r22
+  48               	.LCFI6:
+  49               		.cfi_def_cfa_offset 9
+  50               		.cfi_offset 22, -8
+  51 0018 7F93      		push r23
+  52               	.LCFI7:
+  53               		.cfi_def_cfa_offset 10
+  54               		.cfi_offset 23, -9
+  55 001a 8F93      		push r24
+  56               	.LCFI8:
+  57               		.cfi_def_cfa_offset 11
+  58               		.cfi_offset 24, -10
+  59 001c 9F93      		push r25
+  60               	.LCFI9:
+  61               		.cfi_def_cfa_offset 12
+  62               		.cfi_offset 25, -11
+  63 001e AF93      		push r26
+  64               	.LCFI10:
+  65               		.cfi_def_cfa_offset 13
+  66               		.cfi_offset 26, -12
+  67 0020 BF93      		push r27
+  68               	.LCFI11:
+  69               		.cfi_def_cfa_offset 14
+  70               		.cfi_offset 27, -13
+  71 0022 EF93      		push r30
+  72               	.LCFI12:
+  73               		.cfi_def_cfa_offset 15
+  74               		.cfi_offset 30, -14
+  75 0024 FF93      		push r31
+  76               	.LCFI13:
+  77               		.cfi_def_cfa_offset 16
+  78               		.cfi_offset 31, -15
+  79               	/* prologue: Signal */
+  80               	/* frame size = 0 */
+  81               	/* stack size = 16 */
+  82               	.L__stack_usage = 16
+  61:timer.c       **** 
+  62:timer.c       **** 	/* ----- TIMER ----- */
+  63:timer.c       **** 	uint32_t ticks = tickCount.u32; // increment TickCounter [176 us]
+  83               		.loc 1 63 0
+  84 0026 8091 0000 		lds r24,tickCount
+  85 002a 9091 0000 		lds r25,tickCount+1
+  86 002e A091 0000 		lds r26,tickCount+2
+  87 0032 B091 0000 		lds r27,tickCount+3
+  88               	.LVL0:
+  64:timer.c       **** 	ticks++;
+  89               		.loc 1 64 0
+  90 0036 0196      		adiw r24,1
+  91 0038 A11D      		adc r26,__zero_reg__
+  92 003a B11D      		adc r27,__zero_reg__
+  93               	.LVL1:
+  65:timer.c       **** 	tickCount.u32 = ticks; // optimiezes volatile, because Ints are off
+  94               		.loc 1 65 0
+  95 003c 8093 0000 		sts tickCount,r24
+  96 0040 9093 0000 		sts tickCount+1,r25
+  97 0044 A093 0000 		sts tickCount+2,r26
+  98 0048 B093 0000 		sts tickCount+3,r27
+  66:timer.c       **** 	
+  67:timer.c       **** 	sei(); // Interrupts ON, e.g. UART can be used parallel to RC5 ...
+  99               		.loc 1 67 0
+ 100               	/* #APP */
+ 101               	 ;  67 "timer.c" 1
+ 102 004c 7894      		sei
+ 103               	 ;  0 "" 2
+  68:timer.c       **** 
+  69:timer.c       **** 
+  70:timer.c       **** 	/* - Gear Indicator - */
+  71:timer.c       **** 	gear_isr();
+ 104               		.loc 1 71 0
+ 105               	/* #NOAPP */
+ 106 004e 0E94 0000 		call gear_isr
+ 107               	.LVL2:
+ 108               	/* epilogue start */
+  72:timer.c       **** 	
+  73:timer.c       **** 	
+  74:timer.c       **** }
+ 109               		.loc 1 74 0
+ 110 0052 FF91      		pop r31
+ 111 0054 EF91      		pop r30
+ 112 0056 BF91      		pop r27
+ 113 0058 AF91      		pop r26
+ 114 005a 9F91      		pop r25
+ 115 005c 8F91      		pop r24
+ 116 005e 7F91      		pop r23
+ 117 0060 6F91      		pop r22
+ 118 0062 5F91      		pop r21
+ 119 0064 4F91      		pop r20
+ 120 0066 3F91      		pop r19
+ 121 0068 2F91      		pop r18
+ 122 006a 0F90      		pop r0
+ 123 006c 0BBE      		out __RAMPZ__,r0
+ 124 006e 0F90      		pop r0
+ 125 0070 0FBE      		out __SREG__,r0
+ 126 0072 0F90      		pop r0
+ 127 0074 1F90      		pop r1
+ 128 0076 1895      		reti
+ 129               		.cfi_endproc
+ 130               	.LFE4:
+ 132               	.global	timer_2_init
+ 134               	timer_2_init:
+ 135               	.LFB5:
+  75:timer.c       **** 
+  76:timer.c       **** /*!
+  77:timer.c       ****  * Initializes Timer 0 and starts it
+  78:timer.c       ****  */
+  79:timer.c       **** void timer_2_init(void)
+  80:timer.c       **** {
+ 136               		.loc 1 80 0
+ 137               		.cfi_startproc
+ 138               	/* prologue: function */
+ 139               	/* frame size = 0 */
+ 140               	/* stack size = 0 */
+ 141               	.L__stack_usage = 0
+  81:timer.c       **** 	TCNT2  = 0x00;            // TIMER preload
+ 142               		.loc 1 81 0
+ 143 0078 14BC      		out 0x24,__zero_reg__
+  82:timer.c       **** 
+  83:timer.c       **** 	// If you change the Prescaler, adapt the formula for OCR2 !!! 
+  84:timer.c       **** 	// Compare Register only 8-Bit  --> opt. prescaler change
+  85:timer.c       **** 	TCCR2 |= (1<<WGM21) | (1<<CS21) | (1<<CS20); // CTC to OCR2; Prescaler to 64
+ 144               		.loc 1 85 0
+ 145 007a 85B5      		in r24,0x25
+ 146 007c 8B60      		ori r24,lo8(11)
+ 147 007e 85BD      		out 0x25,r24
+  86:timer.c       **** 	OCR2 = ((F_CPU/64/TIMER_2_CLOCK) - 1);	// Timer2A 16Mhz/64/5619= 44,49...
+ 148               		.loc 1 86 0
+ 149 0080 8BE2      		ldi r24,lo8(43)
+ 150 0082 83BD      		out 0x23,r24
+  87:timer.c       **** 	TIMSK  |= (1<<OCIE2);	// TIMER2 Output Compare Match A Interrupt ON
+ 151               		.loc 1 87 0
+ 152 0084 87B7      		in r24,0x37
+ 153 0086 8068      		ori r24,lo8(-128)
+ 154 0088 87BF      		out 0x37,r24
+  88:timer.c       **** 
+  89:timer.c       **** 	sei();                  // enable interrupts
+ 155               		.loc 1 89 0
+ 156               	/* #APP */
+ 157               	 ;  89 "timer.c" 1
+ 158 008a 7894      		sei
+ 159               	 ;  0 "" 2
+ 160               	/* #NOAPP */
+ 161 008c 0895      		ret
+ 162               		.cfi_endproc
+ 163               	.LFE5:
+ 165               	.global	delay
+ 167               	delay:
+ 168               	.LFB6:
+  90:timer.c       **** }
+  91:timer.c       **** 
+  92:timer.c       **** 
+  93:timer.c       **** /*!
+  94:timer.c       ****  * Waits for ms milliseconds
+  95:timer.c       ****  * @param ms 	Number of milliseconds to wait
+  96:timer.c       ****  */
+  97:timer.c       **** void delay(uint16_t ms)
+  98:timer.c       **** {	
+ 169               		.loc 1 98 0
+ 170               		.cfi_startproc
+ 171               	.LVL3:
+ 172 008e CF92      		push r12
+ 173               	.LCFI14:
+ 174               		.cfi_def_cfa_offset 3
+ 175               		.cfi_offset 12, -2
+ 176 0090 DF92      		push r13
+ 177               	.LCFI15:
+ 178               		.cfi_def_cfa_offset 4
+ 179               		.cfi_offset 13, -3
+ 180 0092 EF92      		push r14
+ 181               	.LCFI16:
+ 182               		.cfi_def_cfa_offset 5
+ 183               		.cfi_offset 14, -4
+ 184 0094 FF92      		push r15
+ 185               	.LCFI17:
+ 186               		.cfi_def_cfa_offset 6
+ 187               		.cfi_offset 15, -5
+ 188               	/* prologue: function */
+ 189               	/* frame size = 0 */
+ 190               	/* stack size = 4 */
+ 191               	.L__stack_usage = 4
+  99:timer.c       **** 	uint32_t start = TIMER_GET_TICKCOUNT_32;
+ 192               		.loc 1 99 0
+ 193 0096 C090 0000 		lds r12,tickCount
+ 194 009a D090 0000 		lds r13,tickCount+1
+ 195 009e E090 0000 		lds r14,tickCount+2
+ 196 00a2 F090 0000 		lds r15,tickCount+3
+ 197               	.LVL4:
+ 100:timer.c       **** 	if ((uint8_t)start != TIMER_GET_TICKCOUNT_8) start = TIMER_GET_TICKCOUNT_32;
+ 198               		.loc 1 100 0
+ 199 00a6 2091 0000 		lds r18,tickCount
+ 200 00aa 2C15      		cp r18,r12
+ 201 00ac 01F0      		breq .L4
+ 202               		.loc 1 100 0 is_stmt 0 discriminator 1
+ 203 00ae C090 0000 		lds r12,tickCount
+ 204 00b2 D090 0000 		lds r13,tickCount+1
+ 205 00b6 E090 0000 		lds r14,tickCount+2
+ 206 00ba F090 0000 		lds r15,tickCount+3
+ 207               	.LVL5:
+ 208               	.L4:
+ 101:timer.c       **** 	uint32_t ticksToWait = MS_TO_TICKS((uint32_t)ms);
+ 209               		.loc 1 101 0 is_stmt 1
+ 210 00be 9C01      		movw r18,r24
+ 211 00c0 ADE7      		ldi r26,lo8(125)
+ 212 00c2 B0E0      		ldi r27,0
+ 213 00c4 0E94 0000 		call __umulhisi3
+ 214 00c8 26E1      		ldi r18,lo8(22)
+ 215 00ca 30E0      		ldi r19,0
+ 216 00cc 40E0      		ldi r20,0
+ 217 00ce 50E0      		ldi r21,0
+ 218 00d0 0E94 0000 		call __udivmodsi4
+ 219               	.LVL6:
+ 220               	.L7:
+ 102:timer.c       **** 	uint32_t now;
+ 103:timer.c       **** 	do {
+ 104:timer.c       **** 		now = TIMER_GET_TICKCOUNT_32;
+ 221               		.loc 1 104 0
+ 222 00d4 8091 0000 		lds r24,tickCount
+ 223 00d8 9091 0000 		lds r25,tickCount+1
+ 224 00dc A091 0000 		lds r26,tickCount+2
+ 225 00e0 B091 0000 		lds r27,tickCount+3
+ 226               	.LVL7:
+ 105:timer.c       **** 		if ((uint8_t)now != TIMER_GET_TICKCOUNT_8) now = TIMER_GET_TICKCOUNT_32;
+ 227               		.loc 1 105 0
+ 228 00e4 6091 0000 		lds r22,tickCount
+ 229 00e8 6817      		cp r22,r24
+ 230 00ea 01F0      		breq .L5
+ 231               		.loc 1 105 0 is_stmt 0 discriminator 1
+ 232 00ec 8091 0000 		lds r24,tickCount
+ 233 00f0 9091 0000 		lds r25,tickCount+1
+ 234 00f4 A091 0000 		lds r26,tickCount+2
+ 235 00f8 B091 0000 		lds r27,tickCount+3
+ 236               	.LVL8:
+ 237               	.L5:
+ 106:timer.c       **** 	} while (now-start < ticksToWait);	
+ 238               		.loc 1 106 0 is_stmt 1
+ 239 00fc 8C19      		sub r24,r12
+ 240 00fe 9D09      		sbc r25,r13
+ 241 0100 AE09      		sbc r26,r14
+ 242 0102 BF09      		sbc r27,r15
+ 243               	.LVL9:
+ 244 0104 8217      		cp r24,r18
+ 245 0106 9307      		cpc r25,r19
+ 246 0108 A407      		cpc r26,r20
+ 247 010a B507      		cpc r27,r21
+ 248 010c 00F0      		brlo .L7
+ 249               	/* epilogue start */
+ 107:timer.c       **** }
+ 250               		.loc 1 107 0
+ 251 010e FF90      		pop r15
+ 252 0110 EF90      		pop r14
+ 253 0112 DF90      		pop r13
+ 254 0114 CF90      		pop r12
+ 255               	.LVL10:
+ 256 0116 0895      		ret
+ 257               		.cfi_endproc
+ 258               	.LFE6:
+ 260               		.comm	tickCount,4,1
+ 261               	.Letext0:
+ 262               		.file 2 "/usr/lib/avr/include/stdint.h"
+ 263               		.file 3 "include/timer.h"
+ 264               		.file 4 "include/gear-indicator.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 timer.c
+     /tmp/cc4N6wot.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc4N6wot.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc4N6wot.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc4N6wot.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cc4N6wot.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc4N6wot.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc4N6wot.s:13     .text:0000000000000000 __vector_9
+                            *COM*:0000000000000004 tickCount
+     /tmp/cc4N6wot.s:134    .text:0000000000000078 timer_2_init
+     /tmp/cc4N6wot.s:167    .text:000000000000008e delay
+
+UNDEFINED SYMBOLS
+gear_isr
+__umulhisi3
+__udivmodsi4
+__do_clear_bss

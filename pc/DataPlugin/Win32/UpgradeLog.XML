@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="DataPlugin">
+</Property><Property Name="Solution File" Value="D:\Development\Projects\DataPlugin\Win32\DataPlugin.sln">
+</Property><Property Name="Date" Value="vrijdag 19 juli 2013">
+</Property><Property Name="Time" Value="16:54">
+</Property></Properties><Event ErrorLevel="0" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="Converting project file 'D:\Development\Projects\DataPlugin\Win32\InternalsPlugin.vcproj'.">
+</Event><Event ErrorLevel="1" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="VCWebServiceProxyGeneratorTool is no longer supported. The tool has been removed from your project settings.">
+</Event><Event ErrorLevel="1" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="MSB8012: $(TargetPath) ('D:\Development\Projects\DataPlugin\Win32\.\Release\DataPlugin.dll') does not match the Linker's OutputFile property value '.\Release/DataPlugin.dll' ('D:\Development\Projects\DataPlugin\Win32\Release/DataPlugin.dll') in project configuration 'Release|Win32'. This may cause your project to build incorrectly. To correct this, please make sure that $(TargetPath) property value matches the value specified in %(Link.OutputFile).">
+</Event><Event ErrorLevel="1" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="MSB8012: $(TargetPath) ('D:\Development\Projects\DataPlugin\Win32\.\Debug\DataPlugin.dll') does not match the Linker's OutputFile property value '.\Debug/DataPlugin.dll' ('D:\Development\Projects\DataPlugin\Win32\Debug/DataPlugin.dll') in project configuration 'Debug|Win32'. This may cause your project to build incorrectly. To correct this, please make sure that $(TargetPath) property value matches the value specified in %(Link.OutputFile).">
+</Event><Event ErrorLevel="0" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="Done converting to new project file 'D:\Development\Projects\DataPlugin\Win32\InternalsPlugin.vcxproj'.">
+</Event><Event ErrorLevel="3" Project="InternalsPlugin" Source="InternalsPlugin.vcproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="DataPlugin.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="DataPlugin.sln" Description="Converted">
+</Event></UpgradeLog>

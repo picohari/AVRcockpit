@@ -1,0 +1,649 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	TWI_Act_On_Failure_In_Last_Transmission
+  13               	TWI_Act_On_Failure_In_Last_Transmission:
+  14               	.LFB4:
+  15               		.file 1 "main.c"
+   1:main.c        **** 
+   2:main.c        **** /*
+   3:main.c        ****  *  AVRcockpit Development System for Racing Simulators
+   4:main.c        ****  *
+   5:main.c        ****  *  Harald W. Leschner, DK6YF - 2015  H9-Laboratory Ltd. 
+   6:main.c        ****  *
+   7:main.c        ****  *     hari@h9l.net    or visit    labor.h9l.net
+   8:main.c        ****  *
+   9:main.c        ****  *
+  10:main.c        ****  *  Licensed under the GPL license, see license.txt for details.
+  11:main.c        ****  *
+  12:main.c        ****  *     All text above must be included in any redistribution.
+  13:main.c        ****  *
+  14:main.c        ****  */
+  15:main.c        **** 
+  16:main.c        **** #include <stdlib.h>
+  17:main.c        **** #include <inttypes.h>
+  18:main.c        **** #include <string.h>
+  19:main.c        **** #include <limits.h>
+  20:main.c        **** 
+  21:main.c        **** #include <avr/io.h>
+  22:main.c        **** #include <avr/pgmspace.h>
+  23:main.c        **** #include <avr/interrupt.h>
+  24:main.c        **** #include <avr/wdt.h>
+  25:main.c        **** 
+  26:main.c        **** #include "config.h"
+  27:main.c        **** //#include "sim-commands.h"
+  28:main.c        **** 
+  29:main.c        **** #include "../../common/datacodes.h"
+  30:main.c        **** 
+  31:main.c        **** #include "timer.h"
+  32:main.c        **** #include "font5x7.h"
+  33:main.c        **** #include "twi-slave.h"
+  34:main.c        **** 
+  35:main.c        **** #include "gear-indicator.h"
+  36:main.c        **** #include "lights.h"
+  37:main.c        **** #include "gauges.h"
+  38:main.c        **** 
+  39:main.c        **** 
+  40:main.c        **** /* For casting transmitted values */
+  41:main.c        **** //bool t_bool = FALSE;		// temporary values for storing received VALUE of WHAT
+  42:main.c        **** char t_char = 0;
+  43:main.c        **** short t_short = 0;
+  44:main.c        **** long t_long = 0;
+  45:main.c        **** float t_float = 0;
+  46:main.c        **** double t_double = 0;
+  47:main.c        **** 
+  48:main.c        **** uint8_t t_twobyte[2] = {0,0};
+  49:main.c        **** 
+  50:main.c        **** 
+  51:main.c        **** static unsigned int  gear_data = 0;				// Gear indicator command
+  52:main.c        **** static unsigned short blinker_timing = 0;			// Blinker timing command
+  53:main.c        **** static unsigned char blinker_mode = 1;				// Blinker mode command
+  54:main.c        **** 
+  55:main.c        **** /* I²C Receive buffer and slave address */
+  56:main.c        **** unsigned char messageBuf[TWI_BUFFER_SIZE];
+  57:main.c        **** unsigned char TWI_slaveAddress = TWI_ADDRESS;
+  58:main.c        **** 
+  59:main.c        **** 
+  60:main.c        **** 
+  61:main.c        **** 
+  62:main.c        **** // When there has been an error, this function is run and takes care of it
+  63:main.c        **** unsigned char TWI_Act_On_Failure_In_Last_Transmission ( unsigned char TWIerrorMsg )
+  64:main.c        **** {
+  16               		.loc 1 64 0
+  17               		.cfi_startproc
+  18               	.LVL0:
+  19               	/* prologue: function */
+  20               	/* frame size = 0 */
+  21               	/* stack size = 0 */
+  22               	.L__stack_usage = 0
+  65:main.c        **** 	return TWIerrorMsg; 
+  66:main.c        **** }
+  23               		.loc 1 66 0
+  24 0000 0895      		ret
+  25               		.cfi_endproc
+  26               	.LFE4:
+  28               		.section	.text.startup,"ax",@progbits
+  29               	.global	main
+  31               	main:
+  32               	.LFB6:
+  67:main.c        **** 
+  68:main.c        **** 
+  69:main.c        **** static void init(void)
+  70:main.c        **** {
+  71:main.c        **** 
+  72:main.c        **** 	/* All Inputs -> all zeros */
+  73:main.c        **** 	PORTA=0; DDRA=0;
+  74:main.c        **** 	PORTB=0; DDRB=0;
+  75:main.c        **** 	PORTC=0; DDRC=0;
+  76:main.c        **** 	PORTD=0; DDRD=0;
+  77:main.c        **** 	PORTE=0; DDRE=0;
+  78:main.c        **** 	PORTF=0; DDRF=0;
+  79:main.c        **** 	PORTG=0; DDRG=0;
+  80:main.c        **** 
+  81:main.c        **** 	wdt_disable();		// Watchdog off!
+  82:main.c        **** 
+  83:main.c        **** 
+  84:main.c        **** 	/* LIGHTS Indicators */
+  85:main.c        **** 	lights_init();
+  86:main.c        **** 
+  87:main.c        **** 	/* GEAR Indicator */
+  88:main.c        **** 	gear_indicator_init();
+  89:main.c        **** 
+  90:main.c        **** 	/* ANALOG SPEED AND RPM Indicator */
+  91:main.c        **** 	gauges_init();
+  92:main.c        **** 
+  93:main.c        **** 
+  94:main.c        **** 
+  95:main.c        **** 	/* DEVICE Internal Timer */
+  96:main.c        **** 	timer_2_init();
+  97:main.c        **** 
+  98:main.c        **** 	/* I²C Slave Interface */
+  99:main.c        **** 	#ifdef TWI_AVAILABLE
+ 100:main.c        **** 	// Initialise TWI module for slave operation. Include address and/or enable General Call.
+ 101:main.c        **** 	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
+ 102:main.c        **** 	#endif
+ 103:main.c        **** 
+ 104:main.c        **** }
+ 105:main.c        **** 
+ 106:main.c        **** 
+ 107:main.c        **** 
+ 108:main.c        **** 
+ 109:main.c        **** 
+ 110:main.c        **** int main (void)
+ 111:main.c        **** {
+  33               		.loc 1 111 0
+  34               		.cfi_startproc
+  35               	/* prologue: function */
+  36               	/* frame size = 0 */
+  37               	/* stack size = 0 */
+  38               	.L__stack_usage = 0
+  39               	.LBB6:
+  40               	.LBB7:
+  73:main.c        **** 	PORTA=0; DDRA=0;
+  41               		.loc 1 73 0
+  42 0000 1BBA      		out 0x1b,__zero_reg__
+  43 0002 1ABA      		out 0x1a,__zero_reg__
+  74:main.c        **** 	PORTB=0; DDRB=0;
+  44               		.loc 1 74 0
+  45 0004 18BA      		out 0x18,__zero_reg__
+  46 0006 17BA      		out 0x17,__zero_reg__
+  75:main.c        **** 	PORTC=0; DDRC=0;
+  47               		.loc 1 75 0
+  48 0008 15BA      		out 0x15,__zero_reg__
+  49 000a 14BA      		out 0x14,__zero_reg__
+  76:main.c        **** 	PORTD=0; DDRD=0;
+  50               		.loc 1 76 0
+  51 000c 12BA      		out 0x12,__zero_reg__
+  52 000e 11BA      		out 0x11,__zero_reg__
+  77:main.c        **** 	PORTE=0; DDRE=0;
+  53               		.loc 1 77 0
+  54 0010 13B8      		out 0x3,__zero_reg__
+  55 0012 12B8      		out 0x2,__zero_reg__
+  78:main.c        **** 	PORTF=0; DDRF=0;
+  56               		.loc 1 78 0
+  57 0014 1092 6200 		sts 98,__zero_reg__
+  58 0018 1092 6100 		sts 97,__zero_reg__
+  79:main.c        **** 	PORTG=0; DDRG=0;
+  59               		.loc 1 79 0
+  60 001c 1092 6500 		sts 101,__zero_reg__
+  61 0020 1092 6400 		sts 100,__zero_reg__
+  81:main.c        **** 	wdt_disable();		// Watchdog off!
+  62               		.loc 1 81 0
+  63 0024 88E1      		ldi r24,lo8(24)
+  64               	/* #APP */
+  65               	 ;  81 "main.c" 1
+  66 0026 0FB6      		in __tmp_reg__, __SREG__
+  67 0028 F894      		cli
+  68 002a 81BD      		out 33, r24
+  69 002c 11BC      		out 33, __zero_reg__
+  70 002e 0FBE      		out __SREG__,__tmp_reg__
+  71               		
+  72               	 ;  0 "" 2
+  85:main.c        **** 	lights_init();
+  73               		.loc 1 85 0
+  74               	/* #NOAPP */
+  75 0030 0E94 0000 		call lights_init
+  76               	.LVL1:
+  88:main.c        **** 	gear_indicator_init();
+  77               		.loc 1 88 0
+  78 0034 0E94 0000 		call gear_indicator_init
+  79               	.LVL2:
+  91:main.c        **** 	gauges_init();
+  80               		.loc 1 91 0
+  81 0038 0E94 0000 		call gauges_init
+  82               	.LVL3:
+  96:main.c        **** 	timer_2_init();
+  83               		.loc 1 96 0
+  84 003c 0E94 0000 		call timer_2_init
+  85               	.LVL4:
+ 101:main.c        **** 	TWI_Slave_Initialise( (unsigned char)((TWI_slaveAddress<<TWI_ADR_BITS) | (TRUE<<TWI_GEN_BIT) )); 
+  86               		.loc 1 101 0
+  87 0040 8091 0000 		lds r24,TWI_slaveAddress
+  88 0044 880F      		lsl r24
+  89 0046 8160      		ori r24,lo8(1)
+  90 0048 0E94 0000 		call TWI_Slave_Initialise
+  91               	.LVL5:
+  92               	.LBE7:
+  93               	.LBE6:
+ 112:main.c        **** 
+ 113:main.c        **** 	/* Initiate all */
+ 114:main.c        **** 	init();
+ 115:main.c        **** 
+ 116:main.c        **** 	sei();
+  94               		.loc 1 116 0
+  95               	/* #APP */
+  96               	 ;  116 "main.c" 1
+  97 004c 7894      		sei
+  98               	 ;  0 "" 2
+ 117:main.c        **** 
+ 118:main.c        **** 	#ifdef TWI_AVAILABLE
+ 119:main.c        **** 	// Start the TWI transceiver to enable reseption of the first command from the TWI Master.
+ 120:main.c        **** 	TWI_Start_Transceiver();
+  99               		.loc 1 120 0
+ 100               	/* #NOAPP */
+ 101 004e 0E94 0000 		call TWI_Start_Transceiver
+ 102               	.LVL6:
+ 121:main.c        **** 	#endif
+ 122:main.c        **** 
+ 123:main.c        **** 	glyph = ';';	// Space
+ 124:main.c        **** 	glyph = '<';	// :)
+ 103               		.loc 1 124 0
+ 104 0052 8CE3      		ldi r24,lo8(60)
+ 105 0054 90E0      		ldi r25,0
+ 106 0056 A0E0      		ldi r26,0
+ 107 0058 B0E0      		ldi r27,0
+ 108 005a 8093 0000 		sts glyph,r24
+ 109 005e 9093 0000 		sts glyph+1,r25
+ 110 0062 A093 0000 		sts glyph+2,r26
+ 111 0066 B093 0000 		sts glyph+3,r27
+ 125:main.c        **** 
+ 126:main.c        **** 	delay(2000);
+ 112               		.loc 1 126 0
+ 113 006a 80ED      		ldi r24,lo8(-48)
+ 114 006c 97E0      		ldi r25,lo8(7)
+ 115 006e 0E94 0000 		call delay
+ 116               	.LVL7:
+ 127:main.c        **** 
+ 128:main.c        **** 	glyph = ';';
+ 117               		.loc 1 128 0
+ 118 0072 8BE3      		ldi r24,lo8(59)
+ 119 0074 90E0      		ldi r25,0
+ 120 0076 A0E0      		ldi r26,0
+ 121 0078 B0E0      		ldi r27,0
+ 122 007a 8093 0000 		sts glyph,r24
+ 123 007e 9093 0000 		sts glyph+1,r25
+ 124 0082 A093 0000 		sts glyph+2,r26
+ 125 0086 B093 0000 		sts glyph+3,r27
+ 129:main.c        **** 	
+ 130:main.c        **** 	/* Main Loop */
+ 131:main.c        **** 	for(;;)
+ 132:main.c        **** 	{
+ 133:main.c        **** 	
+ 134:main.c        **** 		#ifdef TWI_AVAILABLE
+ 135:main.c        **** 
+ 136:main.c        **** 		// Check if the TWI Transceiver has completed an operation.
+ 137:main.c        **** 		if ( ! TWI_Transceiver_Busy() )                              
+ 138:main.c        **** 		{
+ 139:main.c        **** 			// Check if the last operation was successful
+ 140:main.c        **** 			if ( TWI_statusReg.lastTransOK )
+ 141:main.c        **** 			{
+ 142:main.c        **** 				// Check if the last operation was a reception
+ 143:main.c        **** 				if ( TWI_statusReg.RxDataInBuf )
+ 144:main.c        **** 				{
+ 145:main.c        **** 					TWI_Get_Data_From_Transceiver(messageBuf, 4);		// Read number of bytes !!
+ 146:main.c        ****          
+ 147:main.c        **** 					// Check if the last operation was a reception as General Call        
+ 148:main.c        **** 					if ( TWI_statusReg.genAddressCall )
+ 149:main.c        **** 					{
+ 150:main.c        **** 					// Put data received out to PORTB as an example.        
+ 151:main.c        **** 						//PORTB = messageBuf[0];
+ 152:main.c        **** 					}               
+ 153:main.c        **** 					else // Ends up here if the last operation was a reception as Slave Address Match   
+ 154:main.c        **** 					{
+ 155:main.c        **** 
+ 156:main.c        **** 						// Example of how to interpret a command and respond.
+ 157:main.c        **** 
+ 158:main.c        **** 
+ 159:main.c        **** 						/* Set Gear */
+ 160:main.c        **** 						if (messageBuf[0] == GEAR)
+ 161:main.c        **** 						{
+ 162:main.c        **** 							gear_data = messageBuf[1];                            
+ 163:main.c        **** 						}
+ 164:main.c        **** 
+ 165:main.c        **** 
+ 166:main.c        **** 						/* Set Toggle Headlights */
+ 167:main.c        **** 						if (messageBuf[0] == HEADLIGHTS)
+ 168:main.c        **** 						{
+ 169:main.c        **** 							lights_illumination(messageBuf[1]);                            
+ 170:main.c        **** 						}
+ 171:main.c        **** 
+ 172:main.c        **** 
+ 173:main.c        **** 						/* Set Warning light frequency */
+ 174:main.c        **** 						if (messageBuf[0] == HIGHBEAM)
+ 175:main.c        **** 						{
+ 176:main.c        **** 							lights_highbeam(messageBuf[1]);                            
+ 177:main.c        **** 						}
+ 178:main.c        **** 
+ 179:main.c        **** 
+ 180:main.c        **** 						/* Set Warning light frequency */
+ 181:main.c        **** 						if (messageBuf[0] == BLINKER)
+ 182:main.c        **** 						{
+ 183:main.c        **** 							blinker_timing = messageBuf[2] + (messageBuf[1] << 8);
+ 184:main.c        **** 							blinker_mode = messageBuf[3];
+ 185:main.c        **** 						}
+ 186:main.c        **** 
+ 187:main.c        **** 
+ 188:main.c        **** 						/* Set Speed */
+ 189:main.c        **** 						if (messageBuf[0] == METERSPERSEC)
+ 190:main.c        **** 						{
+ 191:main.c        **** 							OCR1AH = messageBuf[1];		// Set values directly to timer OCR
+ 192:main.c        **** 							OCR1AL = messageBuf[2];
+ 193:main.c        **** 
+ 194:main.c        **** 							TCNT1=0xffff;				// Update TCNT, as frequencies are low, it may take time to finish the cycl
+ 195:main.c        **** 														// thus we restart the timer TCNT every time to get proper frequency update
+ 196:main.c        **** 							if (OCR1A == 0xFFFF)
+ 197:main.c        **** 								gauge_speedo_off();		// Disconnect timer from clock to make a full stop of output.
+ 198:main.c        **** 							else
+ 199:main.c        **** 								gauge_speedo_on();
+ 200:main.c        **** 						}
+ 201:main.c        **** 
+ 202:main.c        **** 
+ 203:main.c        **** 						/* Set RPM */ 
+ 204:main.c        **** 						if (messageBuf[0] == ENGRPM)
+ 205:main.c        **** 						{
+ 206:main.c        **** 							OCR3AH = messageBuf[1];
+ 207:main.c        **** 							OCR3AL = messageBuf[2];
+ 208:main.c        **** 
+ 209:main.c        **** 							TCNT3=0xffff;
+ 126               		.loc 1 209 0
+ 127 008a CFEF      		ldi r28,lo8(-1)
+ 128 008c DFEF      		ldi r29,lo8(-1)
+ 129               	.L17:
+ 137:main.c        **** 		if ( ! TWI_Transceiver_Busy() )                              
+ 130               		.loc 1 137 0
+ 131 008e 0E94 0000 		call TWI_Transceiver_Busy
+ 132               	.LVL8:
+ 133 0092 8111      		cpse r24,__zero_reg__
+ 134 0094 00C0      		rjmp .L4
+ 140:main.c        **** 			if ( TWI_statusReg.lastTransOK )
+ 135               		.loc 1 140 0
+ 136 0096 8091 0000 		lds r24,TWI_statusReg
+ 137 009a 80FF      		sbrs r24,0
+ 138 009c 00C0      		rjmp .L5
+ 143:main.c        **** 				if ( TWI_statusReg.RxDataInBuf )
+ 139               		.loc 1 143 0
+ 140 009e 81FF      		sbrs r24,1
+ 141 00a0 00C0      		rjmp .L7
+ 145:main.c        **** 					TWI_Get_Data_From_Transceiver(messageBuf, 4);		// Read number of bytes !!
+ 142               		.loc 1 145 0
+ 143 00a2 64E0      		ldi r22,lo8(4)
+ 144 00a4 80E0      		ldi r24,lo8(messageBuf)
+ 145 00a6 90E0      		ldi r25,hi8(messageBuf)
+ 146 00a8 0E94 0000 		call TWI_Get_Data_From_Transceiver
+ 147               	.LVL9:
+ 148:main.c        **** 					if ( TWI_statusReg.genAddressCall )
+ 148               		.loc 1 148 0
+ 149 00ac 8091 0000 		lds r24,TWI_statusReg
+ 150 00b0 82FD      		sbrc r24,2
+ 151 00b2 00C0      		rjmp .L7
+ 160:main.c        **** 						if (messageBuf[0] == GEAR)
+ 152               		.loc 1 160 0
+ 153 00b4 8091 0000 		lds r24,messageBuf
+ 154 00b8 8130      		cpi r24,lo8(1)
+ 155 00ba 01F4      		brne .L9
+ 162:main.c        **** 							gear_data = messageBuf[1];                            
+ 156               		.loc 1 162 0
+ 157 00bc 8091 0000 		lds r24,messageBuf+1
+ 158 00c0 90E0      		ldi r25,0
+ 159 00c2 9093 0000 		sts gear_data+1,r25
+ 160 00c6 8093 0000 		sts gear_data,r24
+ 161 00ca 00C0      		rjmp .L10
+ 162               	.L9:
+ 167:main.c        **** 						if (messageBuf[0] == HEADLIGHTS)
+ 163               		.loc 1 167 0
+ 164 00cc 8831      		cpi r24,lo8(24)
+ 165 00ce 01F4      		brne .L10
+ 169:main.c        **** 							lights_illumination(messageBuf[1]);                            
+ 166               		.loc 1 169 0
+ 167 00d0 8091 0000 		lds r24,messageBuf+1
+ 168 00d4 0E94 0000 		call lights_illumination
+ 169               	.LVL10:
+ 170               	.L10:
+ 174:main.c        **** 						if (messageBuf[0] == HIGHBEAM)
+ 171               		.loc 1 174 0
+ 172 00d8 8091 0000 		lds r24,messageBuf
+ 173 00dc 8931      		cpi r24,lo8(25)
+ 174 00de 01F4      		brne .L11
+ 176:main.c        **** 							lights_highbeam(messageBuf[1]);                            
+ 175               		.loc 1 176 0
+ 176 00e0 8091 0000 		lds r24,messageBuf+1
+ 177 00e4 0E94 0000 		call lights_highbeam
+ 178               	.LVL11:
+ 179               	.L11:
+ 181:main.c        **** 						if (messageBuf[0] == BLINKER)
+ 180               		.loc 1 181 0
+ 181 00e8 8091 0000 		lds r24,messageBuf
+ 182 00ec 8032      		cpi r24,lo8(32)
+ 183 00ee 01F4      		brne .L12
+ 183:main.c        **** 							blinker_timing = messageBuf[2] + (messageBuf[1] << 8);
+ 184               		.loc 1 183 0
+ 185 00f0 2091 0000 		lds r18,messageBuf+2
+ 186 00f4 8091 0000 		lds r24,messageBuf+1
+ 187 00f8 90E0      		ldi r25,0
+ 188 00fa 982F      		mov r25,r24
+ 189 00fc 8827      		clr r24
+ 190 00fe 820F      		add r24,r18
+ 191 0100 911D      		adc r25,__zero_reg__
+ 192 0102 9093 0000 		sts blinker_timing+1,r25
+ 193 0106 8093 0000 		sts blinker_timing,r24
+ 184:main.c        **** 							blinker_mode = messageBuf[3];
+ 194               		.loc 1 184 0
+ 195 010a 8091 0000 		lds r24,messageBuf+3
+ 196 010e 8093 0000 		sts blinker_mode,r24
+ 197 0112 00C0      		rjmp .L13
+ 198               	.L12:
+ 189:main.c        **** 						if (messageBuf[0] == METERSPERSEC)
+ 199               		.loc 1 189 0
+ 200 0114 8731      		cpi r24,lo8(23)
+ 201 0116 01F4      		brne .L13
+ 191:main.c        **** 							OCR1AH = messageBuf[1];		// Set values directly to timer OCR
+ 202               		.loc 1 191 0
+ 203 0118 8091 0000 		lds r24,messageBuf+1
+ 204 011c 8BBD      		out 0x2b,r24
+ 192:main.c        **** 							OCR1AL = messageBuf[2];
+ 205               		.loc 1 192 0
+ 206 011e 8091 0000 		lds r24,messageBuf+2
+ 207 0122 8ABD      		out 0x2a,r24
+ 194:main.c        **** 							TCNT1=0xffff;				// Update TCNT, as frequencies are low, it may take time to finish the cycl
+ 208               		.loc 1 194 0
+ 209 0124 DDBD      		out 0x2c+1,r29
+ 210 0126 CCBD      		out 0x2c,r28
+ 196:main.c        **** 							if (OCR1A == 0xFFFF)
+ 211               		.loc 1 196 0
+ 212 0128 8AB5      		in r24,0x2a
+ 213 012a 9BB5      		in r25,0x2a+1
+ 214 012c 0196      		adiw r24,1
+ 215 012e 01F4      		brne .L14
+ 197:main.c        **** 								gauge_speedo_off();		// Disconnect timer from clock to make a full stop of output.
+ 216               		.loc 1 197 0
+ 217 0130 0E94 0000 		call gauge_speedo_off
+ 218               	.LVL12:
+ 219 0134 00C0      		rjmp .L13
+ 220               	.L14:
+ 199:main.c        **** 								gauge_speedo_on();
+ 221               		.loc 1 199 0
+ 222 0136 0E94 0000 		call gauge_speedo_on
+ 223               	.LVL13:
+ 224               	.L13:
+ 204:main.c        **** 						if (messageBuf[0] == ENGRPM)
+ 225               		.loc 1 204 0
+ 226 013a 8091 0000 		lds r24,messageBuf
+ 227 013e 8131      		cpi r24,lo8(17)
+ 228 0140 01F4      		brne .L7
+ 206:main.c        **** 							OCR3AH = messageBuf[1];
+ 229               		.loc 1 206 0
+ 230 0142 8091 0000 		lds r24,messageBuf+1
+ 231 0146 8093 8700 		sts 135,r24
+ 207:main.c        **** 							OCR3AL = messageBuf[2];
+ 232               		.loc 1 207 0
+ 233 014a 8091 0000 		lds r24,messageBuf+2
+ 234 014e 8093 8600 		sts 134,r24
+ 235               		.loc 1 209 0
+ 236 0152 D093 8900 		sts 136+1,r29
+ 237 0156 C093 8800 		sts 136,r28
+ 210:main.c        **** 
+ 211:main.c        **** 							if (OCR3A == 0xFFFF)
+ 238               		.loc 1 211 0
+ 239 015a 8091 8600 		lds r24,134
+ 240 015e 9091 8700 		lds r25,134+1
+ 241 0162 0196      		adiw r24,1
+ 242 0164 01F4      		brne .L15
+ 212:main.c        **** 								gauge_tacho_off();		// Disconnect timer from clock to make a full stop of output.
+ 243               		.loc 1 212 0
+ 244 0166 0E94 0000 		call gauge_tacho_off
+ 245               	.LVL14:
+ 246 016a 00C0      		rjmp .L7
+ 247               	.L15:
+ 213:main.c        **** 							else
+ 214:main.c        **** 								gauge_tacho_on();
+ 248               		.loc 1 214 0
+ 249 016c 0E94 0000 		call gauge_tacho_on
+ 250               	.LVL15:
+ 251               	.L7:
+ 215:main.c        **** 						}
+ 216:main.c        **** 
+ 217:main.c        **** 					}
+ 218:main.c        **** 				}                
+ 219:main.c        **** 				else // Ends up here if the last operation was a transmission  
+ 220:main.c        **** 				{
+ 221:main.c        **** 				    //NOP(); // Put own code here.
+ 222:main.c        **** 				}
+ 223:main.c        **** 
+ 224:main.c        **** 				// Check if the TWI Transceiver has already been started.
+ 225:main.c        **** 				// If not then restart it to prepare it for new receptions.             
+ 226:main.c        **** 				if ( ! TWI_Transceiver_Busy() )
+ 252               		.loc 1 226 0
+ 253 0170 0E94 0000 		call TWI_Transceiver_Busy
+ 254               	.LVL16:
+ 255 0174 8111      		cpse r24,__zero_reg__
+ 256 0176 00C0      		rjmp .L4
+ 227:main.c        **** 				{
+ 228:main.c        **** 				  TWI_Start_Transceiver();
+ 257               		.loc 1 228 0
+ 258 0178 0E94 0000 		call TWI_Start_Transceiver
+ 259               	.LVL17:
+ 260 017c 00C0      		rjmp .L4
+ 261               	.L5:
+ 229:main.c        **** 				}
+ 230:main.c        **** 			}
+ 231:main.c        **** 			else // Ends up here if the last operation completed unsuccessfully
+ 232:main.c        **** 			{
+ 233:main.c        **** 				TWI_Act_On_Failure_In_Last_Transmission( TWI_Get_State_Info() );
+ 262               		.loc 1 233 0
+ 263 017e 0E94 0000 		call TWI_Get_State_Info
+ 264               	.LVL18:
+ 265               	.L4:
+ 234:main.c        **** 			}
+ 235:main.c        **** 		}
+ 236:main.c        **** 
+ 237:main.c        **** 		#endif /* TWI_AVAILABLE */
+ 238:main.c        **** 
+ 239:main.c        **** 
+ 240:main.c        **** 		/* Display the current gear on indicator */ 
+ 241:main.c        **** 		gear_show(gear_data);
+ 266               		.loc 1 241 0
+ 267 0182 8091 0000 		lds r24,gear_data
+ 268 0186 0E94 0000 		call gear_show
+ 269               	.LVL19:
+ 242:main.c        **** 
+ 243:main.c        **** 		/* Toggle warning lights by frequency */ 
+ 244:main.c        **** 		lights_blinker(blinker_timing, blinker_mode);
+ 270               		.loc 1 244 0
+ 271 018a 6091 0000 		lds r22,blinker_mode
+ 272 018e 8091 0000 		lds r24,blinker_timing
+ 273 0192 9091 0000 		lds r25,blinker_timing+1
+ 274 0196 0E94 0000 		call lights_blinker
+ 275               	.LVL20:
+ 245:main.c        **** 
+ 246:main.c        **** 
+ 247:main.c        **** 
+ 248:main.c        **** 
+ 249:main.c        **** 	
+ 250:main.c        **** 
+ 251:main.c        **** 	
+ 252:main.c        **** 	} /* End for(;;) */ 
+ 276               		.loc 1 252 0
+ 277 019a 00C0      		rjmp .L17
+ 278               		.cfi_endproc
+ 279               	.LFE6:
+ 281               	.global	TWI_slaveAddress
+ 282               		.data
+ 285               	TWI_slaveAddress:
+ 286 0000 10        		.byte	16
+ 287               		.comm	messageBuf,32,1
+ 290               	blinker_mode:
+ 291 0001 01        		.byte	1
+ 292               		.local	blinker_timing
+ 293               		.comm	blinker_timing,2,1
+ 294               		.local	gear_data
+ 295               		.comm	gear_data,2,1
+ 296               	.global	t_twobyte
+ 297               		.section .bss
+ 300               	t_twobyte:
+ 301 0000 0000      		.zero	2
+ 302               	.global	t_double
+ 305               	t_double:
+ 306 0002 0000 0000 		.zero	4
+ 307               	.global	t_float
+ 310               	t_float:
+ 311 0006 0000 0000 		.zero	4
+ 312               	.global	t_long
+ 315               	t_long:
+ 316 000a 0000 0000 		.zero	4
+ 317               	.global	t_short
+ 320               	t_short:
+ 321 000e 0000      		.zero	2
+ 322               	.global	t_char
+ 325               	t_char:
+ 326 0010 00        		.zero	1
+ 327               		.text
+ 328               	.Letext0:
+ 329               		.file 2 "/usr/lib/avr/include/stdint.h"
+ 330               		.file 3 "include/timer.h"
+ 331               		.file 4 "include/twi-slave.h"
+ 332               		.file 5 "include/gear-indicator.h"
+ 333               		.file 6 "include/lights.h"
+ 334               		.file 7 "include/gauges.h"
+ 335               		.file 8 "font5x7.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+     /tmp/ccG4OC1J.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccG4OC1J.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccG4OC1J.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccG4OC1J.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccG4OC1J.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccG4OC1J.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccG4OC1J.s:13     .text:0000000000000000 TWI_Act_On_Failure_In_Last_Transmission
+     /tmp/ccG4OC1J.s:31     .text.startup:0000000000000000 main
+     /tmp/ccG4OC1J.s:285    .data:0000000000000000 TWI_slaveAddress
+                            *COM*:0000000000000020 messageBuf
+     /tmp/ccG4OC1J.s:293    .bss:0000000000000013 gear_data
+                             .bss:0000000000000011 blinker_timing
+     /tmp/ccG4OC1J.s:290    .data:0000000000000001 blinker_mode
+     /tmp/ccG4OC1J.s:300    .bss:0000000000000000 t_twobyte
+     /tmp/ccG4OC1J.s:305    .bss:0000000000000002 t_double
+     /tmp/ccG4OC1J.s:310    .bss:0000000000000006 t_float
+     /tmp/ccG4OC1J.s:315    .bss:000000000000000a t_long
+     /tmp/ccG4OC1J.s:320    .bss:000000000000000e t_short
+     /tmp/ccG4OC1J.s:325    .bss:0000000000000010 t_char
+
+UNDEFINED SYMBOLS
+lights_init
+gear_indicator_init
+gauges_init
+timer_2_init
+TWI_Slave_Initialise
+TWI_Start_Transceiver
+glyph
+delay
+TWI_Transceiver_Busy
+TWI_statusReg
+TWI_Get_Data_From_Transceiver
+lights_illumination
+lights_highbeam
+gauge_speedo_off
+gauge_speedo_on
+gauge_tacho_off
+gauge_tacho_on
+TWI_Get_State_Info
+gear_show
+lights_blinker
+__do_copy_data
+__do_clear_bss

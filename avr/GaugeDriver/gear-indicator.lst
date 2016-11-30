@@ -1,0 +1,982 @@
+   1               		.file	"gear-indicator.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	gear_indicator_init
+  13               	gear_indicator_init:
+  14               	.LFB4:
+  15               		.file 1 "gear-indicator.c"
+   1:gear-indicator.c **** 
+   2:gear-indicator.c **** 
+   3:gear-indicator.c **** #include <stdlib.h>
+   4:gear-indicator.c **** #include <stdint.h>
+   5:gear-indicator.c **** #include <avr/io.h>
+   6:gear-indicator.c **** #include <avr/pgmspace.h>
+   7:gear-indicator.c **** 
+   8:gear-indicator.c **** #include "config.h"
+   9:gear-indicator.c **** #include "timer.h"
+  10:gear-indicator.c **** 
+  11:gear-indicator.c **** #include "gear-indicator.h"
+  12:gear-indicator.c **** #include "font5x7.h"
+  13:gear-indicator.c **** 
+  14:gear-indicator.c **** 
+  15:gear-indicator.c **** unsigned char row_index = 0;		// Used for multiplexing the rows of the 5x7 dot matrix display
+  16:gear-indicator.c **** unsigned long glyph = 0;		// ASCII Code of the glyph to be displayed
+  17:gear-indicator.c **** 
+  18:gear-indicator.c **** unsigned long animate = 0;		// Counter for animation, scrolling effect
+  19:gear-indicator.c **** int cycle[7] = {0, 1, 2, 3, 4, 5, 6};	// Maps current row to a animated position
+  20:gear-indicator.c **** 
+  21:gear-indicator.c **** 
+  22:gear-indicator.c **** void gear_indicator_init(void)
+  23:gear-indicator.c **** {
+  16               		.loc 1 23 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  24:gear-indicator.c **** 	// Columns Pattern to OUTPUT (LED in one column, powered directly by PORTD)
+  25:gear-indicator.c **** 	DDRD = 0xF8;
+  22               		.loc 1 25 0
+  23 0000 88EF      		ldi r24,lo8(-8)
+  24 0002 81BB      		out 0x11,r24
+  26:gear-indicator.c **** 	PORTD = 0x00;
+  25               		.loc 1 26 0
+  26 0004 12BA      		out 0x12,__zero_reg__
+  27:gear-indicator.c **** 
+  28:gear-indicator.c **** 	// Rows Multiplexer to OUTPUT (ULN 2003)
+  29:gear-indicator.c **** 	DDRC = 0x7F;
+  27               		.loc 1 29 0
+  28 0006 8FE7      		ldi r24,lo8(127)
+  29 0008 84BB      		out 0x14,r24
+  30:gear-indicator.c **** 	PORTC = 0x00;
+  30               		.loc 1 30 0
+  31 000a 15BA      		out 0x15,__zero_reg__
+  32 000c 0895      		ret
+  33               		.cfi_endproc
+  34               	.LFE4:
+  36               	.global	gear_show
+  38               	gear_show:
+  39               	.LFB5:
+  31:gear-indicator.c **** }
+  32:gear-indicator.c **** 
+  33:gear-indicator.c **** 
+  34:gear-indicator.c **** void gear_show(uint8_t glyphcode)
+  35:gear-indicator.c **** {
+  40               		.loc 1 35 0
+  41               		.cfi_startproc
+  42               	.LVL0:
+  43               	/* prologue: function */
+  44               	/* frame size = 0 */
+  45               	/* stack size = 0 */
+  46               	.L__stack_usage = 0
+  36:gear-indicator.c **** 	switch (glyphcode)
+  47               		.loc 1 36 0
+  48 000e 8933      		cpi r24,lo8(57)
+  49 0010 01F4      		brne .+2
+  50 0012 00C0      		rjmp .L4
+  51 0014 00F4      		brsh .L5
+  52 0016 8433      		cpi r24,lo8(52)
+  53 0018 01F4      		brne .+2
+  54 001a 00C0      		rjmp .L6
+  55 001c 00F4      		brsh .L7
+  56 001e 8133      		cpi r24,lo8(49)
+  57 0020 01F4      		brne .+2
+  58 0022 00C0      		rjmp .L8
+  59 0024 00F4      		brsh .L9
+  60 0026 8033      		cpi r24,lo8(48)
+  61 0028 01F0      		breq .+2
+  62 002a 00C0      		rjmp .L3
+  37:gear-indicator.c **** 	{
+  38:gear-indicator.c **** 		case 0x30: glyph = '0'; break;
+  63               		.loc 1 38 0
+  64 002c 80E3      		ldi r24,lo8(48)
+  65 002e 90E0      		ldi r25,0
+  66 0030 A0E0      		ldi r26,0
+  67 0032 B0E0      		ldi r27,0
+  68               	.LVL1:
+  69 0034 00C0      		rjmp .L30
+  70               	.LVL2:
+  71               	.L9:
+  36:gear-indicator.c **** 	switch (glyphcode)
+  72               		.loc 1 36 0
+  73 0036 8233      		cpi r24,lo8(50)
+  74 0038 01F4      		brne .+2
+  75 003a 00C0      		rjmp .L11
+  76 003c 8333      		cpi r24,lo8(51)
+  77 003e 01F0      		breq .+2
+  78 0040 00C0      		rjmp .L3
+  39:gear-indicator.c **** 		case 0x31: glyph = '1'; break;
+  40:gear-indicator.c **** 		case 0x32: glyph = '2'; break;
+  41:gear-indicator.c **** 		case 0x33: glyph = '3'; break;
+  79               		.loc 1 41 0
+  80 0042 83E3      		ldi r24,lo8(51)
+  81 0044 90E0      		ldi r25,0
+  82 0046 A0E0      		ldi r26,0
+  83 0048 B0E0      		ldi r27,0
+  84               	.LVL3:
+  85 004a 00C0      		rjmp .L30
+  86               	.LVL4:
+  87               	.L7:
+  36:gear-indicator.c **** 	switch (glyphcode)
+  88               		.loc 1 36 0
+  89 004c 8633      		cpi r24,lo8(54)
+  90 004e 01F4      		brne .+2
+  91 0050 00C0      		rjmp .L13
+  92 0052 00F4      		brsh .+2
+  93 0054 00C0      		rjmp .L14
+  94 0056 8733      		cpi r24,lo8(55)
+  95 0058 01F4      		brne .+2
+  96 005a 00C0      		rjmp .L15
+  97 005c 8833      		cpi r24,lo8(56)
+  98 005e 01F0      		breq .+2
+  99 0060 00C0      		rjmp .L3
+  42:gear-indicator.c **** 		case 0x34: glyph = '4'; break;
+  43:gear-indicator.c **** 		case 0x35: glyph = '5'; break;
+  44:gear-indicator.c **** 		case 0x36: glyph = '6'; break;
+  45:gear-indicator.c **** 		case 0x37: glyph = '7'; break;
+  46:gear-indicator.c **** 		case 0x38: glyph = '8'; break;
+ 100               		.loc 1 46 0
+ 101 0062 88E3      		ldi r24,lo8(56)
+ 102 0064 90E0      		ldi r25,0
+ 103 0066 A0E0      		ldi r26,0
+ 104 0068 B0E0      		ldi r27,0
+ 105               	.LVL5:
+ 106 006a 00C0      		rjmp .L30
+ 107               	.LVL6:
+ 108               	.L5:
+  36:gear-indicator.c **** 	switch (glyphcode)
+ 109               		.loc 1 36 0
+ 110 006c 8436      		cpi r24,lo8(100)
+ 111 006e 01F4      		brne .+2
+ 112 0070 00C0      		rjmp .L17
+ 113 0072 00F4      		brsh .L18
+ 114 0074 8B33      		cpi r24,lo8(59)
+ 115 0076 01F4      		brne .+2
+ 116 0078 00C0      		rjmp .L3
+ 117 007a 00F4      		brsh .+2
+ 118 007c 00C0      		rjmp .L20
+ 119 007e 8C33      		cpi r24,lo8(60)
+ 120 0080 01F4      		brne .+2
+ 121 0082 00C0      		rjmp .L21
+ 122 0084 8136      		cpi r24,lo8(97)
+ 123 0086 01F0      		breq .+2
+ 124 0088 00C0      		rjmp .L3
+  47:gear-indicator.c **** 		case 0x39: glyph = '9'; break;  // R
+  48:gear-indicator.c **** 		case 0x3A: glyph = ':'; break;  // N
+  49:gear-indicator.c **** 		case 0x3B: glyph = ';'; break;  // blank
+  50:gear-indicator.c **** 		case 0x3C: glyph = '<'; break;  // :)
+  51:gear-indicator.c **** 
+  52:gear-indicator.c **** 		case 0x75: glyph = '='; break;	// UP
+  53:gear-indicator.c **** 		case 0x64: glyph = '>'; break;	// DOWN
+  54:gear-indicator.c **** 
+  55:gear-indicator.c **** 		case 0x61: glyph = '?'; break;  // :| FULL
+ 125               		.loc 1 55 0
+ 126 008a 8FE3      		ldi r24,lo8(63)
+ 127 008c 90E0      		ldi r25,0
+ 128 008e A0E0      		ldi r26,0
+ 129 0090 B0E0      		ldi r27,0
+ 130               	.LVL7:
+ 131 0092 00C0      		rjmp .L30
+ 132               	.LVL8:
+ 133               	.L18:
+  36:gear-indicator.c **** 	switch (glyphcode)
+ 134               		.loc 1 36 0
+ 135 0094 8337      		cpi r24,lo8(115)
+ 136 0096 01F4      		brne .+2
+ 137 0098 00C0      		rjmp .L23
+ 138 009a 00F4      		brsh .L24
+ 139 009c 8C36      		cpi r24,lo8(108)
+ 140 009e 01F4      		brne .+2
+ 141 00a0 00C0      		rjmp .L25
+ 142 00a2 8137      		cpi r24,lo8(113)
+ 143 00a4 01F0      		breq .+2
+ 144 00a6 00C0      		rjmp .L3
+  56:gear-indicator.c **** 		case 0x73: glyph = '@'; break;	// :| NEG
+  57:gear-indicator.c **** 
+  58:gear-indicator.c **** 		case 0x71: glyph = 'A'; break;  // CLUTCH Open
+ 145               		.loc 1 58 0
+ 146 00a8 81E4      		ldi r24,lo8(65)
+ 147 00aa 90E0      		ldi r25,0
+ 148 00ac A0E0      		ldi r26,0
+ 149 00ae B0E0      		ldi r27,0
+ 150               	.LVL9:
+ 151 00b0 00C0      		rjmp .L30
+ 152               	.LVL10:
+ 153               	.L24:
+  36:gear-indicator.c **** 	switch (glyphcode)
+ 154               		.loc 1 36 0
+ 155 00b2 8537      		cpi r24,lo8(117)
+ 156 00b4 01F0      		breq .L27
+ 157 00b6 8737      		cpi r24,lo8(119)
+ 158 00b8 01F0      		breq .+2
+ 159 00ba 00C0      		rjmp .L3
+  59:gear-indicator.c **** 		case 0x77: glyph = 'B'; break;	// CLUTCH Close
+ 160               		.loc 1 59 0
+ 161 00bc 82E4      		ldi r24,lo8(66)
+ 162 00be 90E0      		ldi r25,0
+ 163 00c0 A0E0      		ldi r26,0
+ 164 00c2 B0E0      		ldi r27,0
+ 165               	.LVL11:
+ 166 00c4 00C0      		rjmp .L30
+ 167               	.LVL12:
+ 168               	.L8:
+  39:gear-indicator.c **** 		case 0x31: glyph = '1'; break;
+ 169               		.loc 1 39 0
+ 170 00c6 81E3      		ldi r24,lo8(49)
+ 171 00c8 90E0      		ldi r25,0
+ 172 00ca A0E0      		ldi r26,0
+ 173 00cc B0E0      		ldi r27,0
+ 174               	.LVL13:
+ 175 00ce 00C0      		rjmp .L30
+ 176               	.LVL14:
+ 177               	.L11:
+  40:gear-indicator.c **** 		case 0x32: glyph = '2'; break;
+ 178               		.loc 1 40 0
+ 179 00d0 82E3      		ldi r24,lo8(50)
+ 180 00d2 90E0      		ldi r25,0
+ 181 00d4 A0E0      		ldi r26,0
+ 182 00d6 B0E0      		ldi r27,0
+ 183               	.LVL15:
+ 184 00d8 00C0      		rjmp .L30
+ 185               	.LVL16:
+ 186               	.L6:
+  42:gear-indicator.c **** 		case 0x34: glyph = '4'; break;
+ 187               		.loc 1 42 0
+ 188 00da 84E3      		ldi r24,lo8(52)
+ 189 00dc 90E0      		ldi r25,0
+ 190 00de A0E0      		ldi r26,0
+ 191 00e0 B0E0      		ldi r27,0
+ 192               	.LVL17:
+ 193 00e2 00C0      		rjmp .L30
+ 194               	.LVL18:
+ 195               	.L14:
+  43:gear-indicator.c **** 		case 0x35: glyph = '5'; break;
+ 196               		.loc 1 43 0
+ 197 00e4 85E3      		ldi r24,lo8(53)
+ 198 00e6 90E0      		ldi r25,0
+ 199 00e8 A0E0      		ldi r26,0
+ 200 00ea B0E0      		ldi r27,0
+ 201               	.LVL19:
+ 202 00ec 00C0      		rjmp .L30
+ 203               	.LVL20:
+ 204               	.L13:
+  44:gear-indicator.c **** 		case 0x36: glyph = '6'; break;
+ 205               		.loc 1 44 0
+ 206 00ee 86E3      		ldi r24,lo8(54)
+ 207 00f0 90E0      		ldi r25,0
+ 208 00f2 A0E0      		ldi r26,0
+ 209 00f4 B0E0      		ldi r27,0
+ 210               	.LVL21:
+ 211 00f6 00C0      		rjmp .L30
+ 212               	.LVL22:
+ 213               	.L15:
+  45:gear-indicator.c **** 		case 0x37: glyph = '7'; break;
+ 214               		.loc 1 45 0
+ 215 00f8 87E3      		ldi r24,lo8(55)
+ 216 00fa 90E0      		ldi r25,0
+ 217 00fc A0E0      		ldi r26,0
+ 218 00fe B0E0      		ldi r27,0
+ 219               	.LVL23:
+ 220 0100 00C0      		rjmp .L30
+ 221               	.LVL24:
+ 222               	.L4:
+  47:gear-indicator.c **** 		case 0x39: glyph = '9'; break;  // R
+ 223               		.loc 1 47 0
+ 224 0102 89E3      		ldi r24,lo8(57)
+ 225 0104 90E0      		ldi r25,0
+ 226 0106 A0E0      		ldi r26,0
+ 227 0108 B0E0      		ldi r27,0
+ 228               	.LVL25:
+ 229 010a 00C0      		rjmp .L30
+ 230               	.LVL26:
+ 231               	.L20:
+  48:gear-indicator.c **** 		case 0x3A: glyph = ':'; break;  // N
+ 232               		.loc 1 48 0
+ 233 010c 8AE3      		ldi r24,lo8(58)
+ 234 010e 90E0      		ldi r25,0
+ 235 0110 A0E0      		ldi r26,0
+ 236 0112 B0E0      		ldi r27,0
+ 237               	.LVL27:
+ 238 0114 00C0      		rjmp .L30
+ 239               	.LVL28:
+ 240               	.L21:
+  50:gear-indicator.c **** 		case 0x3C: glyph = '<'; break;  // :)
+ 241               		.loc 1 50 0
+ 242 0116 8CE3      		ldi r24,lo8(60)
+ 243 0118 90E0      		ldi r25,0
+ 244 011a A0E0      		ldi r26,0
+ 245 011c B0E0      		ldi r27,0
+ 246               	.LVL29:
+ 247 011e 00C0      		rjmp .L30
+ 248               	.LVL30:
+ 249               	.L27:
+  52:gear-indicator.c **** 		case 0x75: glyph = '='; break;	// UP
+ 250               		.loc 1 52 0
+ 251 0120 8DE3      		ldi r24,lo8(61)
+ 252 0122 90E0      		ldi r25,0
+ 253 0124 A0E0      		ldi r26,0
+ 254 0126 B0E0      		ldi r27,0
+ 255               	.LVL31:
+ 256 0128 00C0      		rjmp .L30
+ 257               	.LVL32:
+ 258               	.L17:
+  53:gear-indicator.c **** 		case 0x64: glyph = '>'; break;	// DOWN
+ 259               		.loc 1 53 0
+ 260 012a 8EE3      		ldi r24,lo8(62)
+ 261 012c 90E0      		ldi r25,0
+ 262 012e A0E0      		ldi r26,0
+ 263 0130 B0E0      		ldi r27,0
+ 264               	.LVL33:
+ 265 0132 00C0      		rjmp .L30
+ 266               	.LVL34:
+ 267               	.L23:
+  56:gear-indicator.c **** 		case 0x73: glyph = '@'; break;	// :| NEG
+ 268               		.loc 1 56 0
+ 269 0134 80E4      		ldi r24,lo8(64)
+ 270 0136 90E0      		ldi r25,0
+ 271 0138 A0E0      		ldi r26,0
+ 272 013a B0E0      		ldi r27,0
+ 273               	.LVL35:
+ 274 013c 00C0      		rjmp .L30
+ 275               	.LVL36:
+ 276               	.L25:
+  60:gear-indicator.c **** 
+  61:gear-indicator.c **** 		case 0x6c: glyph = 'C'; break;	// L = Limiter
+ 277               		.loc 1 61 0
+ 278 013e 83E4      		ldi r24,lo8(67)
+ 279 0140 90E0      		ldi r25,0
+ 280 0142 A0E0      		ldi r26,0
+ 281 0144 B0E0      		ldi r27,0
+ 282               	.LVL37:
+ 283 0146 00C0      		rjmp .L30
+ 284               	.LVL38:
+ 285               	.L3:
+  62:gear-indicator.c **** 
+  63:gear-indicator.c **** 		// Default: 0x3b
+  64:gear-indicator.c **** 		default: glyph = ';';			// Nothing!
+ 286               		.loc 1 64 0
+ 287 0148 8BE3      		ldi r24,lo8(59)
+ 288 014a 90E0      		ldi r25,0
+ 289 014c A0E0      		ldi r26,0
+ 290 014e B0E0      		ldi r27,0
+ 291               	.LVL39:
+ 292               	.L30:
+ 293 0150 8093 0000 		sts glyph,r24
+ 294 0154 9093 0000 		sts glyph+1,r25
+ 295 0158 A093 0000 		sts glyph+2,r26
+ 296 015c B093 0000 		sts glyph+3,r27
+ 297 0160 0895      		ret
+ 298               		.cfi_endproc
+ 299               	.LFE5:
+ 301               	.global	rotate_left
+ 303               	rotate_left:
+ 304               	.LFB6:
+  65:gear-indicator.c **** 	}
+  66:gear-indicator.c **** 
+  67:gear-indicator.c **** }
+  68:gear-indicator.c **** 
+  69:gear-indicator.c **** 
+  70:gear-indicator.c **** void rotate_left(int *array, int n)
+  71:gear-indicator.c **** {
+ 305               		.loc 1 71 0
+ 306               		.cfi_startproc
+ 307               	.LVL40:
+ 308 0162 CF93      		push r28
+ 309               	.LCFI0:
+ 310               		.cfi_def_cfa_offset 3
+ 311               		.cfi_offset 28, -2
+ 312 0164 DF93      		push r29
+ 313               	.LCFI1:
+ 314               		.cfi_def_cfa_offset 4
+ 315               		.cfi_offset 29, -3
+ 316               	/* prologue: function */
+ 317               	/* frame size = 0 */
+ 318               	/* stack size = 2 */
+ 319               	.L__stack_usage = 2
+  72:gear-indicator.c **** 
+  73:gear-indicator.c **** 	int temp = array[0]; // store first value
+ 320               		.loc 1 73 0
+ 321 0166 FC01      		movw r30,r24
+ 322 0168 4081      		ld r20,Z
+ 323 016a 5181      		ldd r21,Z+1
+ 324               	.LVL41:
+ 325 016c DC01      		movw r26,r24
+ 326               	.LBB2:
+  74:gear-indicator.c **** 
+  75:gear-indicator.c **** 	for(int i = 0; i < n-1; i++) {
+ 327               		.loc 1 75 0
+ 328 016e 20E0      		ldi r18,0
+ 329 0170 30E0      		ldi r19,0
+ 330 0172 FB01      		movw r30,r22
+ 331 0174 3197      		sbiw r30,1
+ 332               	.LVL42:
+ 333               	.L33:
+ 334               		.loc 1 75 0 is_stmt 0 discriminator 1
+ 335 0176 2E17      		cp r18,r30
+ 336 0178 3F07      		cpc r19,r31
+ 337 017a 04F4      		brge .L35
+  76:gear-indicator.c **** 		array[i] = array[i+1]; 
+ 338               		.loc 1 76 0 is_stmt 1 discriminator 2
+ 339 017c 1296      		adiw r26,2
+ 340 017e CD91      		ld r28,X+
+ 341 0180 DC91      		ld r29,X
+ 342 0182 1397      		sbiw r26,2+1
+ 343 0184 CD93      		st X+,r28
+ 344 0186 DD93      		st X+,r29
+  75:gear-indicator.c **** 	for(int i = 0; i < n-1; i++) {
+ 345               		.loc 1 75 0 discriminator 2
+ 346 0188 2F5F      		subi r18,-1
+ 347 018a 3F4F      		sbci r19,-1
+ 348               	.LVL43:
+ 349 018c 00C0      		rjmp .L33
+ 350               	.L35:
+ 351               	.LBE2:
+  77:gear-indicator.c **** 	}
+  78:gear-indicator.c **** 	array[n-1] = temp; // put that first value on then end
+ 352               		.loc 1 78 0
+ 353 018e FB01      		movw r30,r22
+ 354 0190 E150      		subi r30,1
+ 355 0192 F048      		sbci r31,-128
+ 356 0194 EE0F      		lsl r30
+ 357 0196 FF1F      		rol r31
+ 358               	.LVL44:
+ 359 0198 E80F      		add r30,r24
+ 360 019a F91F      		adc r31,r25
+ 361 019c 5183      		std Z+1,r21
+ 362 019e 4083      		st Z,r20
+ 363               	/* epilogue start */
+  79:gear-indicator.c **** }
+ 364               		.loc 1 79 0
+ 365 01a0 DF91      		pop r29
+ 366 01a2 CF91      		pop r28
+ 367 01a4 0895      		ret
+ 368               		.cfi_endproc
+ 369               	.LFE6:
+ 371               	.global	rotate_right
+ 373               	rotate_right:
+ 374               	.LFB7:
+  80:gear-indicator.c **** 
+  81:gear-indicator.c **** 
+  82:gear-indicator.c **** void rotate_right(int *array, int n)
+  83:gear-indicator.c **** {
+ 375               		.loc 1 83 0
+ 376               		.cfi_startproc
+ 377               	.LVL45:
+ 378               	/* prologue: function */
+ 379               	/* frame size = 0 */
+ 380               	/* stack size = 0 */
+ 381               	.L__stack_usage = 0
+  84:gear-indicator.c **** 
+  85:gear-indicator.c **** 	int temp = array[n-1]; // store last value
+ 382               		.loc 1 85 0
+ 383 01a6 FB01      		movw r30,r22
+ 384 01a8 E150      		subi r30,1
+ 385 01aa F048      		sbci r31,-128
+ 386 01ac EE0F      		lsl r30
+ 387 01ae FF1F      		rol r31
+ 388 01b0 DC01      		movw r26,r24
+ 389 01b2 AE0F      		add r26,r30
+ 390 01b4 BF1F      		adc r27,r31
+ 391 01b6 2D91      		ld r18,X+
+ 392 01b8 3C91      		ld r19,X
+ 393               	.LVL46:
+ 394 01ba 3296      		adiw r30,2
+ 395 01bc E80F      		add r30,r24
+ 396 01be F91F      		adc r31,r25
+ 397               	.LVL47:
+ 398               	.L37:
+ 399 01c0 6150      		subi r22,1
+ 400 01c2 7109      		sbc r23,__zero_reg__
+ 401               	.LVL48:
+ 402               	.LBB3:
+  86:gear-indicator.c **** 
+  87:gear-indicator.c **** 	for(int i = n-1; i > 0; i--) {
+ 403               		.loc 1 87 0 discriminator 1
+ 404 01c4 1616      		cp __zero_reg__,r22
+ 405 01c6 1706      		cpc __zero_reg__,r23
+ 406 01c8 04F4      		brge .L39
+ 407 01ca DF01      		movw r26,r30
+ 408 01cc 1497      		sbiw r26,4
+  88:gear-indicator.c **** 		array[i] = array[i-1]; 
+ 409               		.loc 1 88 0 discriminator 2
+ 410 01ce 4D91      		ld r20,X+
+ 411 01d0 5C91      		ld r21,X
+ 412 01d2 5293      		st -Z,r21
+ 413 01d4 4293      		st -Z,r20
+ 414               	.LVL49:
+ 415 01d6 00C0      		rjmp .L37
+ 416               	.LVL50:
+ 417               	.L39:
+ 418               	.LBE3:
+  89:gear-indicator.c **** 	}
+  90:gear-indicator.c **** 	array[0] = temp; // put that last value on then beginning
+ 419               		.loc 1 90 0
+ 420 01d8 FC01      		movw r30,r24
+ 421 01da 3183      		std Z+1,r19
+ 422 01dc 2083      		st Z,r18
+ 423 01de 0895      		ret
+ 424               		.cfi_endproc
+ 425               	.LFE7:
+ 427               	.global	display_glyph
+ 429               	display_glyph:
+ 430               	.LFB8:
+  91:gear-indicator.c **** }
+  92:gear-indicator.c **** 
+  93:gear-indicator.c **** 
+  94:gear-indicator.c **** void display_glyph(unsigned char row, unsigned char glyph)
+  95:gear-indicator.c **** {
+ 431               		.loc 1 95 0
+ 432               		.cfi_startproc
+ 433               	.LVL51:
+ 434               	/* prologue: function */
+ 435               	/* frame size = 0 */
+ 436               	/* stack size = 0 */
+ 437               	.L__stack_usage = 0
+ 438               	.LBB4:
+  96:gear-indicator.c **** 	uint8_t pattern;
+  97:gear-indicator.c **** 
+  98:gear-indicator.c **** 	// Get pattern for each row from lookup-table: First ROW is 0x01 starting from TOP going DOWN
+  99:gear-indicator.c **** 	pattern = pgm_read_byte(&font5x7[ (int)(glyph-48) ][ cycle[row] ]);
+ 439               		.loc 1 99 0
+ 440 01e0 A82F      		mov r26,r24
+ 441 01e2 B0E0      		ldi r27,0
+ 442 01e4 AA0F      		lsl r26
+ 443 01e6 BB1F      		rol r27
+ 444 01e8 A050      		subi r26,lo8(-(cycle))
+ 445 01ea B040      		sbci r27,hi8(-(cycle))
+ 446 01ec 70E0      		ldi r23,0
+ 447 01ee 6053      		subi r22,48
+ 448 01f0 7109      		sbc r23,__zero_reg__
+ 449               	.LVL52:
+ 450 01f2 87E0      		ldi r24,lo8(7)
+ 451               	.LVL53:
+ 452 01f4 869F      		mul r24,r22
+ 453 01f6 F001      		movw r30,r0
+ 454 01f8 879F      		mul r24,r23
+ 455 01fa F00D      		add r31,r0
+ 456 01fc 1124      		clr __zero_reg__
+ 457 01fe 8D91      		ld r24,X+
+ 458 0200 9C91      		ld r25,X
+ 459 0202 E80F      		add r30,r24
+ 460 0204 F91F      		adc r31,r25
+ 461 0206 E050      		subi r30,lo8(-(font5x7))
+ 462 0208 F040      		sbci r31,hi8(-(font5x7))
+ 463               	/* #APP */
+ 464               	 ;  99 "gear-indicator.c" 1
+ 465 020a E491      		lpm r30, Z
+ 466               		
+ 467               	 ;  0 "" 2
+ 468               	.LVL54:
+ 469               	/* #NOAPP */
+ 470               	.LBE4:
+ 100:gear-indicator.c **** 	
+ 101:gear-indicator.c **** 	// Delete old port settings
+ 102:gear-indicator.c **** 	PORTD &= ~( (1 << PD3) | (1 << PD4) | (1 << PD5) | (1 << PD6) | (1 << PD7) );
+ 471               		.loc 1 102 0
+ 472 020c 82B3      		in r24,0x12
+ 473 020e 8770      		andi r24,lo8(7)
+ 474 0210 82BB      		out 0x12,r24
+ 475               	.LVL55:
+ 103:gear-indicator.c **** 	PORTC &= ~( (1 << PC0) | (1 << PC1) | (1 << PC2) | (1 << PC3) | (1 << PC4) | (1 << PC5) | (1 << PC
+ 476               		.loc 1 103 0
+ 477 0212 85B3      		in r24,0x15
+ 478 0214 8078      		andi r24,lo8(-128)
+ 479 0216 85BB      		out 0x15,r24
+ 104:gear-indicator.c **** 	
+ 105:gear-indicator.c **** 	// Set new pattern to port
+ 106:gear-indicator.c **** 	PORTD |= ( 0xF8 & (pattern) << 3);
+ 480               		.loc 1 106 0
+ 481 0218 82B3      		in r24,0x12
+ 482 021a 98E0      		ldi r25,lo8(8)
+ 483 021c E99F      		mul r30,r25
+ 484 021e F001      		movw r30,r0
+ 485 0220 1124      		clr __zero_reg__
+ 486               	.LVL56:
+ 487 0222 8E2B      		or r24,r30
+ 488 0224 82BB      		out 0x12,r24
+ 107:gear-indicator.c **** 
+ 108:gear-indicator.c **** 	// Shift ROW one bit DOWN (OFF by ONE as we use PD0 as RX in for UART)
+ 109:gear-indicator.c **** 	PORTC = (1 << row_index);
+ 489               		.loc 1 109 0
+ 490 0226 81E0      		ldi r24,lo8(1)
+ 491 0228 90E0      		ldi r25,0
+ 492 022a 0090 0000 		lds r0,row_index
+ 493 022e 00C0      		rjmp 2f
+ 494               		1:
+ 495 0230 880F      		lsl r24
+ 496 0232 991F      		rol r25
+ 497               		2:
+ 498 0234 0A94      		dec r0
+ 499 0236 02F4      		brpl 1b
+ 500 0238 85BB      		out 0x15,r24
+ 501 023a 0895      		ret
+ 502               		.cfi_endproc
+ 503               	.LFE8:
+ 505               	.global	gear_isr
+ 507               	gear_isr:
+ 508               	.LFB9:
+ 110:gear-indicator.c **** 
+ 111:gear-indicator.c **** }
+ 112:gear-indicator.c **** 
+ 113:gear-indicator.c **** 
+ 114:gear-indicator.c **** void gear_isr(void)
+ 115:gear-indicator.c **** {
+ 509               		.loc 1 115 0
+ 510               		.cfi_startproc
+ 511               	/* prologue: function */
+ 512               	/* frame size = 0 */
+ 513               	/* stack size = 0 */
+ 514               	.L__stack_usage = 0
+ 116:gear-indicator.c **** 
+ 117:gear-indicator.c **** 	// Refresh frequency... The Darlingtons are not very fast, so give some time to go down....
+ 118:gear-indicator.c **** 	if ( (animate % 10) == 0)
+ 515               		.loc 1 118 0
+ 516 023c 6091 0000 		lds r22,animate
+ 517 0240 7091 0000 		lds r23,animate+1
+ 518 0244 8091 0000 		lds r24,animate+2
+ 519 0248 9091 0000 		lds r25,animate+3
+ 520 024c 2AE0      		ldi r18,lo8(10)
+ 521 024e 30E0      		ldi r19,0
+ 522 0250 40E0      		ldi r20,0
+ 523 0252 50E0      		ldi r21,0
+ 524 0254 0E94 0000 		call __udivmodsi4
+ 525 0258 672B      		or r22,r23
+ 526 025a 682B      		or r22,r24
+ 527 025c 692B      		or r22,r25
+ 528 025e 01F4      		brne .L42
+ 119:gear-indicator.c **** 	{
+ 120:gear-indicator.c **** 		display_glyph(row_index, glyph);	// Call display function
+ 529               		.loc 1 120 0
+ 530 0260 6091 0000 		lds r22,glyph
+ 531 0264 8091 0000 		lds r24,row_index
+ 532 0268 0E94 0000 		call display_glyph
+ 533               	.LVL57:
+ 121:gear-indicator.c **** 
+ 122:gear-indicator.c **** 		row_index++;					// Select next row next time
+ 534               		.loc 1 122 0
+ 535 026c 8091 0000 		lds r24,row_index
+ 536 0270 8F5F      		subi r24,lo8(-(1))
+ 123:gear-indicator.c **** 		row_index = row_index % 7;		// Stay in boundaries... 0b0000.0001 to 0b0100.0000
+ 537               		.loc 1 123 0
+ 538 0272 67E0      		ldi r22,lo8(7)
+ 539 0274 0E94 0000 		call __udivmodqi4
+ 540 0278 9093 0000 		sts row_index,r25
+ 541               	.L42:
+ 124:gear-indicator.c **** 	}
+ 125:gear-indicator.c **** 
+ 126:gear-indicator.c **** 	// Animate some symbols, mainly scrolling effect
+ 127:gear-indicator.c **** 	if ((animate % 300) == 0)
+ 542               		.loc 1 127 0
+ 543 027c 6091 0000 		lds r22,animate
+ 544 0280 7091 0000 		lds r23,animate+1
+ 545 0284 8091 0000 		lds r24,animate+2
+ 546 0288 9091 0000 		lds r25,animate+3
+ 547 028c 2CE2      		ldi r18,lo8(44)
+ 548 028e 31E0      		ldi r19,lo8(1)
+ 549 0290 40E0      		ldi r20,0
+ 550 0292 50E0      		ldi r21,0
+ 551 0294 0E94 0000 		call __udivmodsi4
+ 552 0298 672B      		or r22,r23
+ 553 029a 682B      		or r22,r24
+ 554 029c 692B      		or r22,r25
+ 555 029e 01F0      		breq .+2
+ 556 02a0 00C0      		rjmp .L43
+ 128:gear-indicator.c **** 	{
+ 129:gear-indicator.c **** 		switch (glyph)		// Do this only for selected glyphs...
+ 557               		.loc 1 129 0
+ 558 02a2 8091 0000 		lds r24,glyph
+ 559 02a6 9091 0000 		lds r25,glyph+1
+ 560 02aa A091 0000 		lds r26,glyph+2
+ 561 02ae B091 0000 		lds r27,glyph+3
+ 562 02b2 8D33      		cpi r24,61
+ 563 02b4 9105      		cpc r25,__zero_reg__
+ 564 02b6 A105      		cpc r26,__zero_reg__
+ 565 02b8 B105      		cpc r27,__zero_reg__
+ 566 02ba 01F0      		breq .L45
+ 567 02bc CE97      		sbiw r24,62
+ 568 02be A105      		cpc r26,__zero_reg__
+ 569 02c0 B105      		cpc r27,__zero_reg__
+ 570 02c2 01F4      		brne .L48
+ 130:gear-indicator.c **** 		{
+ 131:gear-indicator.c **** 			case '=': rotate_left(cycle, 7); break;		// We shift the pattern throug an array to get up/down 
+ 132:gear-indicator.c **** 			case '>': rotate_right(cycle, 7); break;
+ 571               		.loc 1 132 0
+ 572 02c4 67E0      		ldi r22,lo8(7)
+ 573 02c6 70E0      		ldi r23,0
+ 574 02c8 80E0      		ldi r24,lo8(cycle)
+ 575 02ca 90E0      		ldi r25,hi8(cycle)
+ 576 02cc 0E94 0000 		call rotate_right
+ 577               	.LVL58:
+ 578 02d0 00C0      		rjmp .L43
+ 579               	.L45:
+ 131:gear-indicator.c **** 			case '=': rotate_left(cycle, 7); break;		// We shift the pattern throug an array to get up/down 
+ 580               		.loc 1 131 0
+ 581 02d2 67E0      		ldi r22,lo8(7)
+ 582 02d4 70E0      		ldi r23,0
+ 583 02d6 80E0      		ldi r24,lo8(cycle)
+ 584 02d8 90E0      		ldi r25,hi8(cycle)
+ 585 02da 0E94 0000 		call rotate_left
+ 586               	.LVL59:
+ 587 02de 00C0      		rjmp .L43
+ 588               	.L48:
+ 133:gear-indicator.c **** 
+ 134:gear-indicator.c **** 			default:
+ 135:gear-indicator.c **** 			cycle[0] = 0;
+ 589               		.loc 1 135 0
+ 590 02e0 1092 0000 		sts cycle+1,__zero_reg__
+ 591 02e4 1092 0000 		sts cycle,__zero_reg__
+ 136:gear-indicator.c **** 			cycle[1] = 1;
+ 592               		.loc 1 136 0
+ 593 02e8 81E0      		ldi r24,lo8(1)
+ 594 02ea 90E0      		ldi r25,0
+ 595 02ec 9093 0000 		sts cycle+2+1,r25
+ 596 02f0 8093 0000 		sts cycle+2,r24
+ 137:gear-indicator.c **** 			cycle[2] = 2;
+ 597               		.loc 1 137 0
+ 598 02f4 82E0      		ldi r24,lo8(2)
+ 599 02f6 90E0      		ldi r25,0
+ 600 02f8 9093 0000 		sts cycle+4+1,r25
+ 601 02fc 8093 0000 		sts cycle+4,r24
+ 138:gear-indicator.c **** 			cycle[3] = 3;
+ 602               		.loc 1 138 0
+ 603 0300 83E0      		ldi r24,lo8(3)
+ 604 0302 90E0      		ldi r25,0
+ 605 0304 9093 0000 		sts cycle+6+1,r25
+ 606 0308 8093 0000 		sts cycle+6,r24
+ 139:gear-indicator.c **** 			cycle[4] = 4;
+ 607               		.loc 1 139 0
+ 608 030c 84E0      		ldi r24,lo8(4)
+ 609 030e 90E0      		ldi r25,0
+ 610 0310 9093 0000 		sts cycle+8+1,r25
+ 611 0314 8093 0000 		sts cycle+8,r24
+ 140:gear-indicator.c **** 			cycle[5] = 5;
+ 612               		.loc 1 140 0
+ 613 0318 85E0      		ldi r24,lo8(5)
+ 614 031a 90E0      		ldi r25,0
+ 615 031c 9093 0000 		sts cycle+10+1,r25
+ 616 0320 8093 0000 		sts cycle+10,r24
+ 141:gear-indicator.c **** 			cycle[6] = 6;
+ 617               		.loc 1 141 0
+ 618 0324 86E0      		ldi r24,lo8(6)
+ 619 0326 90E0      		ldi r25,0
+ 620 0328 9093 0000 		sts cycle+12+1,r25
+ 621 032c 8093 0000 		sts cycle+12,r24
+ 622               	.L43:
+ 142:gear-indicator.c **** 		}
+ 143:gear-indicator.c **** 	}
+ 144:gear-indicator.c **** 
+ 145:gear-indicator.c **** 	animate++;
+ 623               		.loc 1 145 0
+ 624 0330 8091 0000 		lds r24,animate
+ 625 0334 9091 0000 		lds r25,animate+1
+ 626 0338 A091 0000 		lds r26,animate+2
+ 627 033c B091 0000 		lds r27,animate+3
+ 628 0340 0196      		adiw r24,1
+ 629 0342 A11D      		adc r26,__zero_reg__
+ 630 0344 B11D      		adc r27,__zero_reg__
+ 631 0346 8093 0000 		sts animate,r24
+ 632 034a 9093 0000 		sts animate+1,r25
+ 633 034e A093 0000 		sts animate+2,r26
+ 634 0352 B093 0000 		sts animate+3,r27
+ 635 0356 0895      		ret
+ 636               		.cfi_endproc
+ 637               	.LFE9:
+ 639               	.global	cycle
+ 640               		.data
+ 643               	cycle:
+ 644 0000 0000      		.word	0
+ 645 0002 0100      		.word	1
+ 646 0004 0200      		.word	2
+ 647 0006 0300      		.word	3
+ 648 0008 0400      		.word	4
+ 649 000a 0500      		.word	5
+ 650 000c 0600      		.word	6
+ 651               	.global	animate
+ 652               		.section .bss
+ 655               	animate:
+ 656 0000 0000 0000 		.zero	4
+ 657               	.global	glyph
+ 660               	glyph:
+ 661 0004 0000 0000 		.zero	4
+ 662               	.global	row_index
+ 665               	row_index:
+ 666 0008 00        		.zero	1
+ 667               		.section	.progmem.data,"a",@progbits
+ 670               	font5x7:
+ 671 0000 0E        		.byte	14
+ 672 0001 11        		.byte	17
+ 673 0002 13        		.byte	19
+ 674 0003 15        		.byte	21
+ 675 0004 19        		.byte	25
+ 676 0005 11        		.byte	17
+ 677 0006 0E        		.byte	14
+ 678 0007 04        		.byte	4
+ 679 0008 0C        		.byte	12
+ 680 0009 04        		.byte	4
+ 681 000a 04        		.byte	4
+ 682 000b 04        		.byte	4
+ 683 000c 04        		.byte	4
+ 684 000d 0E        		.byte	14
+ 685 000e 0E        		.byte	14
+ 686 000f 11        		.byte	17
+ 687 0010 01        		.byte	1
+ 688 0011 06        		.byte	6
+ 689 0012 08        		.byte	8
+ 690 0013 10        		.byte	16
+ 691 0014 1F        		.byte	31
+ 692 0015 0E        		.byte	14
+ 693 0016 11        		.byte	17
+ 694 0017 01        		.byte	1
+ 695 0018 06        		.byte	6
+ 696 0019 01        		.byte	1
+ 697 001a 11        		.byte	17
+ 698 001b 0E        		.byte	14
+ 699 001c 06        		.byte	6
+ 700 001d 0A        		.byte	10
+ 701 001e 12        		.byte	18
+ 702 001f 12        		.byte	18
+ 703 0020 1F        		.byte	31
+ 704 0021 02        		.byte	2
+ 705 0022 02        		.byte	2
+ 706 0023 1F        		.byte	31
+ 707 0024 10        		.byte	16
+ 708 0025 1E        		.byte	30
+ 709 0026 01        		.byte	1
+ 710 0027 01        		.byte	1
+ 711 0028 11        		.byte	17
+ 712 0029 0E        		.byte	14
+ 713 002a 0E        		.byte	14
+ 714 002b 11        		.byte	17
+ 715 002c 10        		.byte	16
+ 716 002d 1E        		.byte	30
+ 717 002e 11        		.byte	17
+ 718 002f 11        		.byte	17
+ 719 0030 0E        		.byte	14
+ 720 0031 1F        		.byte	31
+ 721 0032 01        		.byte	1
+ 722 0033 02        		.byte	2
+ 723 0034 04        		.byte	4
+ 724 0035 08        		.byte	8
+ 725 0036 08        		.byte	8
+ 726 0037 08        		.byte	8
+ 727 0038 0E        		.byte	14
+ 728 0039 11        		.byte	17
+ 729 003a 11        		.byte	17
+ 730 003b 0E        		.byte	14
+ 731 003c 11        		.byte	17
+ 732 003d 11        		.byte	17
+ 733 003e 0E        		.byte	14
+ 734 003f 1E        		.byte	30
+ 735 0040 11        		.byte	17
+ 736 0041 11        		.byte	17
+ 737 0042 1E        		.byte	30
+ 738 0043 12        		.byte	18
+ 739 0044 11        		.byte	17
+ 740 0045 11        		.byte	17
+ 741 0046 11        		.byte	17
+ 742 0047 11        		.byte	17
+ 743 0048 19        		.byte	25
+ 744 0049 15        		.byte	21
+ 745 004a 13        		.byte	19
+ 746 004b 11        		.byte	17
+ 747 004c 11        		.byte	17
+ 748 004d 00        		.byte	0
+ 749 004e 00        		.byte	0
+ 750 004f 00        		.byte	0
+ 751 0050 00        		.byte	0
+ 752 0051 00        		.byte	0
+ 753 0052 00        		.byte	0
+ 754 0053 00        		.byte	0
+ 755 0054 00        		.byte	0
+ 756 0055 0A        		.byte	10
+ 757 0056 00        		.byte	0
+ 758 0057 04        		.byte	4
+ 759 0058 11        		.byte	17
+ 760 0059 0E        		.byte	14
+ 761 005a 00        		.byte	0
+ 762 005b 00        		.byte	0
+ 763 005c 00        		.byte	0
+ 764 005d 00        		.byte	0
+ 765 005e 04        		.byte	4
+ 766 005f 04        		.byte	4
+ 767 0060 0E        		.byte	14
+ 768 0061 1F        		.byte	31
+ 769 0062 1F        		.byte	31
+ 770 0063 0E        		.byte	14
+ 771 0064 04        		.byte	4
+ 772 0065 04        		.byte	4
+ 773 0066 00        		.byte	0
+ 774 0067 00        		.byte	0
+ 775 0068 00        		.byte	0
+ 776 0069 1F        		.byte	31
+ 777 006a 15        		.byte	21
+ 778 006b 1F        		.byte	31
+ 779 006c 1B        		.byte	27
+ 780 006d 1F        		.byte	31
+ 781 006e 11        		.byte	17
+ 782 006f 1F        		.byte	31
+ 783 0070 00        		.byte	0
+ 784 0071 0A        		.byte	10
+ 785 0072 00        		.byte	0
+ 786 0073 04        		.byte	4
+ 787 0074 00        		.byte	0
+ 788 0075 0E        		.byte	14
+ 789 0076 00        		.byte	0
+ 790 0077 1F        		.byte	31
+ 791 0078 15        		.byte	21
+ 792 0079 00        		.byte	0
+ 793 007a 00        		.byte	0
+ 794 007b 00        		.byte	0
+ 795 007c 0A        		.byte	10
+ 796 007d 1F        		.byte	31
+ 797 007e 04        		.byte	4
+ 798 007f 04        		.byte	4
+ 799 0080 1F        		.byte	31
+ 800 0081 1F        		.byte	31
+ 801 0082 1F        		.byte	31
+ 802 0083 04        		.byte	4
+ 803 0084 04        		.byte	4
+ 804 0085 18        		.byte	24
+ 805 0086 18        		.byte	24
+ 806 0087 18        		.byte	24
+ 807 0088 18        		.byte	24
+ 808 0089 18        		.byte	24
+ 809 008a 1F        		.byte	31
+ 810 008b 1F        		.byte	31
+ 811               		.text
+ 812               	.Letext0:
+ 813               		.file 2 "/usr/lib/avr/include/stdint.h"
+ 814               		.file 3 "include/timer.h"
+ 815               		.file 4 "font5x7.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 gear-indicator.c
+     /tmp/ccOTsqFA.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccOTsqFA.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccOTsqFA.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccOTsqFA.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccOTsqFA.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccOTsqFA.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccOTsqFA.s:13     .text:0000000000000000 gear_indicator_init
+     /tmp/ccOTsqFA.s:38     .text:000000000000000e gear_show
+     /tmp/ccOTsqFA.s:660    .bss:0000000000000004 glyph
+     /tmp/ccOTsqFA.s:303    .text:0000000000000162 rotate_left
+     /tmp/ccOTsqFA.s:373    .text:00000000000001a6 rotate_right
+     /tmp/ccOTsqFA.s:429    .text:00000000000001e0 display_glyph
+     /tmp/ccOTsqFA.s:643    .data:0000000000000000 cycle
+     /tmp/ccOTsqFA.s:670    .progmem.data:0000000000000000 font5x7
+     /tmp/ccOTsqFA.s:665    .bss:0000000000000008 row_index
+     /tmp/ccOTsqFA.s:507    .text:000000000000023c gear_isr
+     /tmp/ccOTsqFA.s:655    .bss:0000000000000000 animate
+
+UNDEFINED SYMBOLS
+__udivmodsi4
+__udivmodqi4
+__do_copy_data
+__do_clear_bss

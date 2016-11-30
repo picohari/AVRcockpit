@@ -1,0 +1,565 @@
+   1               		.file	"lights.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	lights_init
+  13               	lights_init:
+  14               	.LFB4:
+  15               		.file 1 "lights.c"
+   1:lights.c      **** 
+   2:lights.c      **** 
+   3:lights.c      **** #include <stdlib.h>
+   4:lights.c      **** #include <stdint.h>
+   5:lights.c      **** #include <avr/io.h>
+   6:lights.c      **** 
+   7:lights.c      **** #include "config.h"
+   8:lights.c      **** #include "timer.h"
+   9:lights.c      **** 
+  10:lights.c      **** #include "lights.h"
+  11:lights.c      **** 
+  12:lights.c      **** 
+  13:lights.c      **** uint8_t lights_status = 0;
+  14:lights.c      **** 
+  15:lights.c      **** 
+  16:lights.c      **** void lights_init(void)
+  17:lights.c      **** {
+  16               		.loc 1 17 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  18:lights.c      **** 	/* 12V Switches for LIGHTS (UDN2981A) */
+  19:lights.c      **** 	DDRA = 0xFF;
+  22               		.loc 1 19 0
+  23 0000 8FEF      		ldi r24,lo8(-1)
+  24 0002 8ABB      		out 0x1a,r24
+  20:lights.c      **** 	PORTA = 0x00;
+  25               		.loc 1 20 0
+  26 0004 1BBA      		out 0x1b,__zero_reg__
+  27 0006 0895      		ret
+  28               		.cfi_endproc
+  29               	.LFE4:
+  31               	.global	lights_illumination
+  33               	lights_illumination:
+  34               	.LFB5:
+  21:lights.c      **** }
+  22:lights.c      **** 
+  23:lights.c      **** 
+  24:lights.c      **** void lights_illumination(uint8_t status)
+  25:lights.c      **** {
+  35               		.loc 1 25 0
+  36               		.cfi_startproc
+  37               	.LVL0:
+  38               	/* prologue: function */
+  39               	/* frame size = 0 */
+  40               	/* stack size = 0 */
+  41               	.L__stack_usage = 0
+  26:lights.c      **** 	if (status == 0) {
+  42               		.loc 1 26 0
+  43 0008 8111      		cpse r24,__zero_reg__
+  44 000a 00C0      		rjmp .L3
+  27:lights.c      **** 		// Switch illumination off
+  28:lights.c      **** 		PORTA &= ~(1 << LIGHTS_ILLUMINATION);
+  45               		.loc 1 28 0
+  46 000c D998      		cbi 0x1b,1
+  47 000e 0895      		ret
+  48               	.L3:
+  29:lights.c      **** 	} else {
+  30:lights.c      **** 		// Switch illumination on
+  31:lights.c      **** 		PORTA |= (1 << LIGHTS_ILLUMINATION);
+  49               		.loc 1 31 0
+  50 0010 D99A      		sbi 0x1b,1
+  51 0012 0895      		ret
+  52               		.cfi_endproc
+  53               	.LFE5:
+  55               	.global	lights_highbeam
+  57               	lights_highbeam:
+  58               	.LFB6:
+  32:lights.c      **** 	}
+  33:lights.c      **** 
+  34:lights.c      **** }
+  35:lights.c      **** 
+  36:lights.c      **** 
+  37:lights.c      **** void lights_highbeam(uint8_t status)
+  38:lights.c      **** {
+  59               		.loc 1 38 0
+  60               		.cfi_startproc
+  61               	.LVL1:
+  62               	/* prologue: function */
+  63               	/* frame size = 0 */
+  64               	/* stack size = 0 */
+  65               	.L__stack_usage = 0
+  39:lights.c      **** 	if (status == 0) {
+  66               		.loc 1 39 0
+  67 0014 8111      		cpse r24,__zero_reg__
+  68 0016 00C0      		rjmp .L7
+  40:lights.c      **** 		// Switch highbeam off
+  41:lights.c      **** 		PORTA &= ~(1 << LIGHTS_HIGHBEAM);
+  69               		.loc 1 41 0
+  70 0018 DA98      		cbi 0x1b,2
+  71 001a 0895      		ret
+  72               	.L7:
+  42:lights.c      **** 	} else {
+  43:lights.c      **** 		// Switch highbeam on
+  44:lights.c      **** 		PORTA |= (1 << LIGHTS_HIGHBEAM);
+  73               		.loc 1 44 0
+  74 001c DA9A      		sbi 0x1b,2
+  75 001e 0895      		ret
+  76               		.cfi_endproc
+  77               	.LFE6:
+  79               	.global	lights_blinker
+  81               	lights_blinker:
+  82               	.LFB7:
+  45:lights.c      **** 	}
+  46:lights.c      **** 
+  47:lights.c      **** }
+  48:lights.c      **** 
+  49:lights.c      **** 
+  50:lights.c      **** static uint16_t lightsblinker_ticks = 0;
+  51:lights.c      **** static uint8_t lightsblinker_toggle = 0;
+  52:lights.c      **** 
+  53:lights.c      **** void lights_blinker(unsigned short timing, unsigned char mode)
+  54:lights.c      **** {
+  83               		.loc 1 54 0
+  84               		.cfi_startproc
+  85               	.LVL2:
+  86 0020 8F92      		push r8
+  87               	.LCFI0:
+  88               		.cfi_def_cfa_offset 3
+  89               		.cfi_offset 8, -2
+  90 0022 9F92      		push r9
+  91               	.LCFI1:
+  92               		.cfi_def_cfa_offset 4
+  93               		.cfi_offset 9, -3
+  94 0024 AF92      		push r10
+  95               	.LCFI2:
+  96               		.cfi_def_cfa_offset 5
+  97               		.cfi_offset 10, -4
+  98 0026 BF92      		push r11
+  99               	.LCFI3:
+ 100               		.cfi_def_cfa_offset 6
+ 101               		.cfi_offset 11, -5
+ 102 0028 CF92      		push r12
+ 103               	.LCFI4:
+ 104               		.cfi_def_cfa_offset 7
+ 105               		.cfi_offset 12, -6
+ 106 002a DF92      		push r13
+ 107               	.LCFI5:
+ 108               		.cfi_def_cfa_offset 8
+ 109               		.cfi_offset 13, -7
+ 110 002c EF92      		push r14
+ 111               	.LCFI6:
+ 112               		.cfi_def_cfa_offset 9
+ 113               		.cfi_offset 14, -8
+ 114 002e FF92      		push r15
+ 115               	.LCFI7:
+ 116               		.cfi_def_cfa_offset 10
+ 117               		.cfi_offset 15, -9
+ 118 0030 1F93      		push r17
+ 119               	.LCFI8:
+ 120               		.cfi_def_cfa_offset 11
+ 121               		.cfi_offset 17, -10
+ 122 0032 CF93      		push r28
+ 123               	.LCFI9:
+ 124               		.cfi_def_cfa_offset 12
+ 125               		.cfi_offset 28, -11
+ 126 0034 DF93      		push r29
+ 127               	.LCFI10:
+ 128               		.cfi_def_cfa_offset 13
+ 129               		.cfi_offset 29, -12
+ 130               	/* prologue: function */
+ 131               	/* frame size = 0 */
+ 132               	/* stack size = 11 */
+ 133               	.L__stack_usage = 11
+ 134 0036 EC01      		movw r28,r24
+ 135 0038 162F      		mov r17,r22
+ 136               	.LVL3:
+ 137               	.LBB7:
+ 138               	.LBB8:
+ 139               		.file 2 "include/timer.h"
+   1:include/timer.h ****  
+   2:include/timer.h **** 
+   3:include/timer.h **** #ifndef TIMER_H_
+   4:include/timer.h **** #define TIMER_H_
+   5:include/timer.h **** 
+   6:include/timer.h **** #include "config.h"
+   7:include/timer.h **** 
+   8:include/timer.h **** #include <stdlib.h>
+   9:include/timer.h **** #include <stdint.h>
+  10:include/timer.h **** #include <avr/io.h>
+  11:include/timer.h **** #include <avr/interrupt.h>
+  12:include/timer.h **** #include <avr/pgmspace.h>
+  13:include/timer.h **** #include "timer.h"
+  14:include/timer.h **** 
+  15:include/timer.h **** //#include "log.h"
+  16:include/timer.h **** /*!
+  17:include/timer.h ****  * Makro to calculate Ticks in ms
+  18:include/timer.h ****  * (ms / ticks opt. cast to uint32, if greater values)
+  19:include/timer.h ****  */
+  20:include/timer.h **** #define TICKS_TO_MS(ticks)	((ticks)*(TIMER_STEPS/8)/(1000/8))
+  21:include/timer.h **** 
+  22:include/timer.h **** /*!
+  23:include/timer.h ****  * Makro to calculate ms in Ticks
+  24:include/timer.h ****  * (ms / ticks opt. cast to uint32, if greater values)
+  25:include/timer.h ****  */
+  26:include/timer.h **** #define MS_TO_TICKS(ms)		((ms)*(1000/8)/(TIMER_STEPS/8))
+  27:include/timer.h **** 
+  28:include/timer.h **** /*!
+  29:include/timer.h ****  * Makro to calculate ms in Ticks
+  30:include/timer.h ****  * (ms / ticks opt. cast to uint32, if greater values)
+  31:include/timer.h ****  */
+  32:include/timer.h **** #define S_TO_TICKS(s)		MS_TO_TICKS(ms)*1000
+  33:include/timer.h **** 
+  34:include/timer.h **** #ifdef TIME_AVAILABLE
+  35:include/timer.h **** /*!
+  36:include/timer.h ****  * This function returnes the system time in parts of milliseconds.
+  37:include/timer.h ****  * @return	Milliseconds of system time
+  38:include/timer.h ****  */
+  39:include/timer.h **** uint16_t timer_get_ms(void);
+  40:include/timer.h **** 
+  41:include/timer.h **** /*!
+  42:include/timer.h ****  * Diese Funktion liefert den Sekundenanteil der Systemzeit zurueck.
+  43:include/timer.h ****  * @return Sekunden der Systemzeit
+  44:include/timer.h ****  */
+  45:include/timer.h **** uint16_t timer_get_s(void);
+  46:include/timer.h **** 
+  47:include/timer.h **** /*!
+  48:include/timer.h ****  * Returns seconds passed since old_s, old_ms
+  49:include/timer.h ****  * @param old_s		old value for the seconds
+  50:include/timer.h ****  * @param old_ms	old value for the milliseconds
+  51:include/timer.h ****  */
+  52:include/timer.h **** uint16_t timer_get_ms_since(uint16_t old_s, uint16_t old_ms);
+  53:include/timer.h **** #endif // TIME_AVAILABLE
+  54:include/timer.h **** 
+  55:include/timer.h **** 
+  56:include/timer.h **** 
+  57:include/timer.h **** /*! Union forr TickCount in 8, 16 and 32 Bit */
+  58:include/timer.h **** typedef union {
+  59:include/timer.h **** 	uint32_t u32;		/*!< 32 Bit Integer */
+  60:include/timer.h **** 	uint16_t u16;		/*!< 16 Bit Integer */
+  61:include/timer.h **** 	uint8_t u8;		/*!< 8 Bit Integer */
+  62:include/timer.h **** } tickCount_t;
+  63:include/timer.h **** extern volatile tickCount_t tickCount;			/*!< one Tick every 176 us */
+  64:include/timer.h **** 
+  65:include/timer.h **** /*
+  66:include/timer.h ****  * Set system time back to 0
+  67:include/timer.h ****  */
+  68:include/timer.h **** static inline void timer_reset(void) {
+  69:include/timer.h **** 	tickCount.u32 = 0;
+  70:include/timer.h **** }
+  71:include/timer.h **** 
+  72:include/timer.h **** #define TIMER_GET_TICKCOUNT_8  tickCount.u8		/*!< Zeit in 8 Bit */
+  73:include/timer.h **** #define TIMER_GET_TICKCOUNT_16 tickCount.u16	/*!< Zeit in 16 Bit */
+  74:include/timer.h **** #define TIMER_GET_TICKCOUNT_32 tickCount.u32	/*!< Zeit in 32 Bit */
+  75:include/timer.h **** 
+  76:include/timer.h **** 
+  77:include/timer.h **** // Values for TIMER_X_CLOCK are in ** Hz **
+  78:include/timer.h **** 
+  79:include/timer.h **** /*!
+  80:include/timer.h ****  * Frequency Timer 2 in Hz
+  81:include/timer.h ****  */
+  82:include/timer.h **** #define TIMER_2_CLOCK	5619	// Currently used for RC5
+  83:include/timer.h **** 
+  84:include/timer.h **** /*!
+  85:include/timer.h ****  * Microseconds passed since two Timer calls
+  86:include/timer.h ****  */
+  87:include/timer.h **** #define TIMER_STEPS 176
+  88:include/timer.h **** 
+  89:include/timer.h **** /*!
+  90:include/timer.h ****  * @brief				Checks if since the lase call min. ms milliseconds have passed
+  91:include/timer.h ****  * @param old_ticks		Pointer to a variable able to save a timestamp
+  92:include/timer.h ****  * @param ms			Time in ms that have to be passed, sothat True can be returned
+  93:include/timer.h ****  * @return				True or False
+  94:include/timer.h ****  *
+  95:include/timer.h ****  * This function actualizes the timestamp holding the old time to be compared and saves it automati
+  96:include/timer.h ****  * ms milliseconds have been passed.
+  97:include/timer.h ****  * To be used like this:
+  98:include/timer.h ****  * 
+  99:include/timer.h ****  * 	static uint32 old_time;
+ 100:include/timer.h ****  * 	...
+ 101:include/timer.h ****  * 	if (timer_ms_passed(&old_time, 50)) {
+ 102:include/timer.h ****  * 			// is done every 50ms //
+ 103:include/timer.h ****  * 	}
+ 104:include/timer.h ****  * 	...
+ 105:include/timer.h ****  */
+ 106:include/timer.h **** #ifndef DOXYGEN
+ 107:include/timer.h **** 	static inline uint8_t __attribute__((always_inline)) timer_ms_passed(void * old_ticks, uint32_t ms
+ 108:include/timer.h **** #else
+ 109:include/timer.h **** 	static inline uint8_t timer_ms_passed(void* old_ticks, uint32_t ms) {
+ 110:include/timer.h **** #endif
+ 111:include/timer.h **** 
+ 112:include/timer.h **** 	/* 8 Bit Version */
+ 113:include/timer.h **** 	if (MS_TO_TICKS(ms) < UINT8_MAX) {
+ 140               		.loc 2 113 0
+ 141 003a 9C01      		movw r18,r24
+ 142 003c ADE7      		ldi r26,lo8(125)
+ 143 003e B0E0      		ldi r27,0
+ 144 0040 0E94 0000 		call __umulhisi3
+ 145               	.LVL4:
+ 146 0044 6A3E      		cpi r22,-22
+ 147 0046 25E1      		ldi r18,21
+ 148 0048 7207      		cpc r23,r18
+ 149 004a 8105      		cpc r24,__zero_reg__
+ 150 004c 9105      		cpc r25,__zero_reg__
+ 151 004e 00F4      		brsh .L10
+ 152               	.LBB9:
+ 114:include/timer.h **** 		register uint8_t ticks = TIMER_GET_TICKCOUNT_8;
+ 153               		.loc 2 114 0
+ 154 0050 B090 0000 		lds r11,tickCount
+ 155               	.LVL5:
+ 115:include/timer.h **** 		if ((uint8_t)(ticks - *(uint8_t *)old_ticks) > MS_TO_TICKS(ms)) {
+ 156               		.loc 2 115 0
+ 157 0054 2091 0000 		lds r18,lightsblinker_ticks
+ 158 0058 CB2C      		mov r12,r11
+ 159 005a C21A      		sub r12,r18
+ 160 005c D12C      		mov r13,__zero_reg__
+ 161 005e E12C      		mov r14,__zero_reg__
+ 162 0060 F12C      		mov r15,__zero_reg__
+ 163 0062 26E1      		ldi r18,lo8(22)
+ 164 0064 30E0      		ldi r19,0
+ 165 0066 40E0      		ldi r20,0
+ 166 0068 50E0      		ldi r21,0
+ 167 006a 0E94 0000 		call __udivmodsi4
+ 168 006e 2C15      		cp r18,r12
+ 169 0070 3D05      		cpc r19,r13
+ 170 0072 4E05      		cpc r20,r14
+ 171 0074 5F05      		cpc r21,r15
+ 172 0076 00F0      		brlo .+2
+ 173 0078 00C0      		rjmp .L9
+ 116:include/timer.h **** 			*(uint8_t *)old_ticks = ticks;
+ 174               		.loc 2 116 0
+ 175 007a B092 0000 		sts lightsblinker_ticks,r11
+ 176 007e 00C0      		rjmp .L12
+ 177               	.LVL6:
+ 178               	.L10:
+ 179               	.LBE9:
+ 117:include/timer.h **** 			return TRUE;
+ 118:include/timer.h **** 		}
+ 119:include/timer.h **** 		return FALSE;
+ 120:include/timer.h **** 
+ 121:include/timer.h **** 	/* 16 Bit Version */
+ 122:include/timer.h **** 	} else if (MS_TO_TICKS(ms) < UINT16_MAX) {
+ 180               		.loc 2 122 0
+ 181 0080 6A3E      		cpi r22,-22
+ 182 0082 3FEF      		ldi r19,-1
+ 183 0084 7307      		cpc r23,r19
+ 184 0086 35E1      		ldi r19,21
+ 185 0088 8307      		cpc r24,r19
+ 186 008a 9105      		cpc r25,__zero_reg__
+ 187 008c 00F4      		brsh .L13
+ 188               	.LBB10:
+ 123:include/timer.h **** 		register uint16_t ticks = TIMER_GET_TICKCOUNT_16;
+ 189               		.loc 2 123 0
+ 190 008e E090 0000 		lds r14,tickCount
+ 191 0092 F090 0000 		lds r15,tickCount+1
+ 192               	.LVL7:
+ 124:include/timer.h **** 		if ((uint16_t)(ticks - *(uint16_t *)old_ticks) > MS_TO_TICKS(ms)) {
+ 193               		.loc 2 124 0
+ 194 0096 2091 0000 		lds r18,lightsblinker_ticks
+ 195 009a 3091 0000 		lds r19,lightsblinker_ticks+1
+ 196 009e 4701      		movw r8,r14
+ 197 00a0 821A      		sub r8,r18
+ 198 00a2 930A      		sbc r9,r19
+ 199 00a4 A12C      		mov r10,__zero_reg__
+ 200 00a6 B12C      		mov r11,__zero_reg__
+ 201 00a8 26E1      		ldi r18,lo8(22)
+ 202 00aa 30E0      		ldi r19,0
+ 203 00ac 40E0      		ldi r20,0
+ 204 00ae 50E0      		ldi r21,0
+ 205 00b0 0E94 0000 		call __udivmodsi4
+ 206 00b4 2815      		cp r18,r8
+ 207 00b6 3905      		cpc r19,r9
+ 208 00b8 4A05      		cpc r20,r10
+ 209 00ba 5B05      		cpc r21,r11
+ 210 00bc 00F0      		brlo .+2
+ 211 00be 00C0      		rjmp .L9
+ 125:include/timer.h **** 			*(uint16_t *)old_ticks = ticks;
+ 212               		.loc 2 125 0
+ 213 00c0 F092 0000 		sts lightsblinker_ticks+1,r15
+ 214 00c4 E092 0000 		sts lightsblinker_ticks,r14
+ 215 00c8 00C0      		rjmp .L12
+ 216               	.LVL8:
+ 217               	.L13:
+ 218               	.LBE10:
+ 219               	.LBB11:
+ 126:include/timer.h **** 			return TRUE;
+ 127:include/timer.h **** 		}
+ 128:include/timer.h **** 		return FALSE;
+ 129:include/timer.h **** 
+ 130:include/timer.h **** 	/* 32 Bit Version */
+ 131:include/timer.h **** 	} else {
+ 132:include/timer.h **** 		register uint32_t ticks = TIMER_GET_TICKCOUNT_32;
+ 220               		.loc 2 132 0
+ 221 00ca C090 0000 		lds r12,tickCount
+ 222 00ce D090 0000 		lds r13,tickCount+1
+ 223 00d2 E090 0000 		lds r14,tickCount+2
+ 224 00d6 F090 0000 		lds r15,tickCount+3
+ 225               	.LVL9:
+ 133:include/timer.h **** 		if ((uint32_t)(ticks - *(uint32_t *)old_ticks) > MS_TO_TICKS(ms)) {
+ 226               		.loc 2 133 0
+ 227 00da 8090 0000 		lds r8,lightsblinker_ticks
+ 228 00de 9090 0000 		lds r9,lightsblinker_ticks+1
+ 229 00e2 A090 0000 		lds r10,lightsblinker_ticks+2
+ 230 00e6 B090 0000 		lds r11,lightsblinker_ticks+3
+ 231 00ea A701      		movw r20,r14
+ 232 00ec 9601      		movw r18,r12
+ 233 00ee 2819      		sub r18,r8
+ 234 00f0 3909      		sbc r19,r9
+ 235 00f2 4A09      		sbc r20,r10
+ 236 00f4 5B09      		sbc r21,r11
+ 237 00f6 4901      		movw r8,r18
+ 238 00f8 5A01      		movw r10,r20
+ 239 00fa 26E1      		ldi r18,lo8(22)
+ 240 00fc 30E0      		ldi r19,0
+ 241 00fe 40E0      		ldi r20,0
+ 242 0100 50E0      		ldi r21,0
+ 243 0102 0E94 0000 		call __udivmodsi4
+ 244 0106 2815      		cp r18,r8
+ 245 0108 3905      		cpc r19,r9
+ 246 010a 4A05      		cpc r20,r10
+ 247 010c 5B05      		cpc r21,r11
+ 248 010e 00F4      		brsh .L9
+ 134:include/timer.h **** 			*(uint32_t *)old_ticks = ticks;
+ 249               		.loc 2 134 0
+ 250 0110 C092 0000 		sts lightsblinker_ticks,r12
+ 251 0114 D092 0000 		sts lightsblinker_ticks+1,r13
+ 252 0118 E092 0000 		sts lightsblinker_ticks+2,r14
+ 253 011c F092 0000 		sts lightsblinker_ticks+3,r15
+ 254               	.LVL10:
+ 255               	.L12:
+ 256               	.LBE11:
+ 257               	.LBE8:
+ 258               	.LBE7:
+  55:lights.c      **** 	if (timer_ms_passed(&lightsblinker_ticks, timing)) {
+  56:lights.c      **** 			
+  57:lights.c      **** 		if (timing != 0) {
+ 259               		.loc 1 57 0
+ 260 0120 CD2B      		or r28,r29
+ 261 0122 01F0      		breq .L21
+  58:lights.c      **** 
+  59:lights.c      **** 			if (lightsblinker_toggle == 1){
+ 262               		.loc 1 59 0
+ 263 0124 8091 0000 		lds r24,lightsblinker_toggle
+ 264               	.LVL11:
+ 265 0128 8130      		cpi r24,lo8(1)
+ 266 012a 01F0      		breq .L21
+  60:lights.c      **** 		
+  61:lights.c      **** 				PORTA &= ~(1 << LIGHTS_TURN_LEFT);
+  62:lights.c      **** 				PORTA &= ~(1 << LIGHTS_TURN_RIGHT);
+  63:lights.c      **** 	 			lightsblinker_toggle = 0;
+  64:lights.c      ****  			 	 			
+  65:lights.c      **** 			} else {
+  66:lights.c      **** 
+  67:lights.c      **** 				switch (mode) {
+ 267               		.loc 1 67 0
+ 268 012c 1130      		cpi r17,lo8(1)
+ 269 012e 01F0      		breq .L16
+ 270 0130 00F0      		brlo .L17
+ 271 0132 1230      		cpi r17,lo8(2)
+ 272 0134 01F0      		breq .L18
+ 273 0136 00C0      		rjmp .L15
+ 274               	.L17:
+  68:lights.c      **** 					case 0:
+  69:lights.c      **** 						PORTA |= (1 << LIGHTS_TURN_LEFT);
+ 275               		.loc 1 69 0
+ 276 0138 DC9A      		sbi 0x1b,4
+ 277 013a 00C0      		rjmp .L18
+ 278               	.L16:
+  70:lights.c      **** 						PORTA |= (1 << LIGHTS_TURN_RIGHT);
+  71:lights.c      **** 						break;
+  72:lights.c      **** 					case 1:
+  73:lights.c      **** 						PORTA |= (1 << LIGHTS_TURN_LEFT);
+ 279               		.loc 1 73 0
+ 280 013c DC9A      		sbi 0x1b,4
+  74:lights.c      **** 						break;
+ 281               		.loc 1 74 0
+ 282 013e 00C0      		rjmp .L15
+ 283               	.L18:
+  75:lights.c      **** 					case 2:
+  76:lights.c      **** 						PORTA |= (1 << LIGHTS_TURN_RIGHT);
+ 284               		.loc 1 76 0
+ 285 0140 DE9A      		sbi 0x1b,6
+ 286               	.L15:
+  77:lights.c      **** 						break;
+  78:lights.c      **** 				}
+  79:lights.c      **** 
+  80:lights.c      **** 				lightsblinker_toggle = 1;
+ 287               		.loc 1 80 0
+ 288 0142 81E0      		ldi r24,lo8(1)
+ 289 0144 8093 0000 		sts lightsblinker_toggle,r24
+ 290 0148 00C0      		rjmp .L9
+ 291               	.L21:
+  81:lights.c      **** 			}
+  82:lights.c      **** 
+  83:lights.c      **** 		} else {
+  84:lights.c      **** 			PORTA &= ~(1 << LIGHTS_TURN_LEFT);
+ 292               		.loc 1 84 0
+ 293 014a DC98      		cbi 0x1b,4
+  85:lights.c      **** 			PORTA &= ~(1 << LIGHTS_TURN_RIGHT);
+ 294               		.loc 1 85 0
+ 295 014c DE98      		cbi 0x1b,6
+  86:lights.c      **** 			lightsblinker_toggle = 0;
+ 296               		.loc 1 86 0
+ 297 014e 1092 0000 		sts lightsblinker_toggle,__zero_reg__
+ 298               	.L9:
+ 299               	/* epilogue start */
+  87:lights.c      **** 		}	 			
+  88:lights.c      **** 	}
+  89:lights.c      **** 
+  90:lights.c      **** }
+ 300               		.loc 1 90 0
+ 301 0152 DF91      		pop r29
+ 302 0154 CF91      		pop r28
+ 303               	.LVL12:
+ 304 0156 1F91      		pop r17
+ 305               	.LVL13:
+ 306 0158 FF90      		pop r15
+ 307 015a EF90      		pop r14
+ 308 015c DF90      		pop r13
+ 309 015e CF90      		pop r12
+ 310 0160 BF90      		pop r11
+ 311 0162 AF90      		pop r10
+ 312 0164 9F90      		pop r9
+ 313 0166 8F90      		pop r8
+ 314 0168 0895      		ret
+ 315               		.cfi_endproc
+ 316               	.LFE7:
+ 318               		.local	lightsblinker_toggle
+ 319               		.comm	lightsblinker_toggle,1,1
+ 320               		.local	lightsblinker_ticks
+ 321               		.comm	lightsblinker_ticks,2,1
+ 322               	.global	lights_status
+ 323               		.section .bss
+ 326               	lights_status:
+ 327 0000 00        		.zero	1
+ 328               		.text
+ 329               	.Letext0:
+ 330               		.file 3 "/usr/lib/avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 lights.c
+     /tmp/ccJbrgLE.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccJbrgLE.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccJbrgLE.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccJbrgLE.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccJbrgLE.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccJbrgLE.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccJbrgLE.s:13     .text:0000000000000000 lights_init
+     /tmp/ccJbrgLE.s:33     .text:0000000000000008 lights_illumination
+     /tmp/ccJbrgLE.s:57     .text:0000000000000014 lights_highbeam
+     /tmp/ccJbrgLE.s:81     .text:0000000000000020 lights_blinker
+     /tmp/ccJbrgLE.s:319    .bss:0000000000000002 lightsblinker_ticks
+                             .bss:0000000000000001 lightsblinker_toggle
+     /tmp/ccJbrgLE.s:326    .bss:0000000000000000 lights_status
+
+UNDEFINED SYMBOLS
+__umulhisi3
+tickCount
+__udivmodsi4
+__do_clear_bss

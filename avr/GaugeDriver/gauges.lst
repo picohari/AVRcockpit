@@ -1,0 +1,227 @@
+   1               		.file	"gauges.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	gauges_init
+  13               	gauges_init:
+  14               	.LFB4:
+  15               		.file 1 "gauges.c"
+   1:gauges.c      **** 
+   2:gauges.c      **** 
+   3:gauges.c      **** #include <stdlib.h>
+   4:gauges.c      **** #include <stdint.h>
+   5:gauges.c      **** #include <avr/io.h>
+   6:gauges.c      **** 
+   7:gauges.c      **** #include "config.h"
+   8:gauges.c      **** #include "timer.h"
+   9:gauges.c      **** 
+  10:gauges.c      **** #include "gauges.h"
+  11:gauges.c      **** 
+  12:gauges.c      **** 
+  13:gauges.c      **** 
+  14:gauges.c      **** 
+  15:gauges.c      **** void gauges_init(void)
+  16:gauges.c      **** {
+  16               		.loc 1 16 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  17:gauges.c      **** 	/* ANALOG GAUGES for Speed and RPM */ 
+  18:gauges.c      **** 	// -- TIMER 1 and 3 set pins to OUTPUT
+  19:gauges.c      **** 	DDRB |= (1 << PB5);
+  22               		.loc 1 19 0
+  23 0000 BD9A      		sbi 0x17,5
+  20:gauges.c      **** 	DDRE |= (1 << PE3);
+  24               		.loc 1 20 0
+  25 0002 139A      		sbi 0x2,3
+  21:gauges.c      **** 
+  22:gauges.c      **** 	// -- TIMER 1 and 3 set initial CTC @ 10bit
+  23:gauges.c      **** 	OCR1A = 0xFFFF;
+  26               		.loc 1 23 0
+  27 0004 8FEF      		ldi r24,lo8(-1)
+  28 0006 9FEF      		ldi r25,lo8(-1)
+  29 0008 9BBD      		out 0x2a+1,r25
+  30 000a 8ABD      		out 0x2a,r24
+  24:gauges.c      **** 	OCR3A = 0xFFFF;
+  31               		.loc 1 24 0
+  32 000c 9093 8700 		sts 134+1,r25
+  33 0010 8093 8600 		sts 134,r24
+  25:gauges.c      **** 
+  26:gauges.c      **** 	/*
+  27:gauges.c      **** 	// -- TIMER 1 Setting to PWM --
+  28:gauges.c      **** 	// set none-inverting mode
+  29:gauges.c      **** 	TCCR1A |= (1 << COM1A1);
+  30:gauges.c      **** 	// set 8bit phase corrected PWM Mode
+  31:gauges.c      **** 	TCCR1A |= (1 << WGM10);
+  32:gauges.c      **** 	// set prescaler to 8 and starts PWM
+  33:gauges.c      **** 	TCCR1B |= (1 << CS11);
+  34:gauges.c      **** 	*/
+  35:gauges.c      **** 
+  36:gauges.c      **** 
+  37:gauges.c      **** 	/* Speedometer (Tacho [for km/h]) */
+  38:gauges.c      **** 	// -- TIMER 1 Setting to CTC --
+  39:gauges.c      **** 	// set CTC mode (connect pins to OCR1x)
+  40:gauges.c      **** 	TCCR1A |= ( (1 << COM1A0) | (1 << COM1B0) );
+  34               		.loc 1 40 0
+  35 0014 8FB5      		in r24,0x2f
+  36 0016 8065      		ori r24,lo8(80)
+  37 0018 8FBD      		out 0x2f,r24
+  41:gauges.c      **** 	// set CTC Immediate Mode
+  42:gauges.c      **** 	TCCR1B |= (1 << WGM12);
+  38               		.loc 1 42 0
+  39 001a 8EB5      		in r24,0x2e
+  40 001c 8860      		ori r24,lo8(8)
+  41 001e 8EBD      		out 0x2e,r24
+  43:gauges.c      **** 	// set prescaler to 64 and starts PWM
+  44:gauges.c      **** 	//TCCR1B |= (1 << CS11) | (1 << CS10);
+  45:gauges.c      **** 	//TCCR1B |= (1 << CS12);
+  46:gauges.c      **** 
+  47:gauges.c      **** 	/* Tachometer (Drehzahlmesser [for RPM]) */
+  48:gauges.c      **** 	// -- TIMER 3 Setting to CTC --
+  49:gauges.c      **** 	// set CTC mode (connect pins to OCR1x)
+  50:gauges.c      **** 	TCCR3A |= ( (1 << COM3A0) );
+  42               		.loc 1 50 0
+  43 0020 EBE8      		ldi r30,lo8(-117)
+  44 0022 F0E0      		ldi r31,0
+  45 0024 8081      		ld r24,Z
+  46 0026 8064      		ori r24,lo8(64)
+  47 0028 8083      		st Z,r24
+  51:gauges.c      **** 	// set CTC Immediate Mode
+  52:gauges.c      **** 	TCCR3B |= (1 << WGM32);
+  48               		.loc 1 52 0
+  49 002a EAE8      		ldi r30,lo8(-118)
+  50 002c F0E0      		ldi r31,0
+  51 002e 8081      		ld r24,Z
+  52 0030 8860      		ori r24,lo8(8)
+  53 0032 8083      		st Z,r24
+  54 0034 0895      		ret
+  55               		.cfi_endproc
+  56               	.LFE4:
+  58               	.global	gauge_speedo_off
+  60               	gauge_speedo_off:
+  61               	.LFB5:
+  53:gauges.c      **** 	// set prescaler to 64 and starts PWM
+  54:gauges.c      **** 	//TCCR1B |= (1 << CS11) | (1 << CS10);
+  55:gauges.c      **** 	//TCCR3B |= (1 << CS32);
+  56:gauges.c      **** 
+  57:gauges.c      **** }
+  58:gauges.c      **** 
+  59:gauges.c      **** 
+  60:gauges.c      **** void gauge_speedo_off (void)
+  61:gauges.c      **** {
+  62               		.loc 1 61 0
+  63               		.cfi_startproc
+  64               	/* prologue: function */
+  65               	/* frame size = 0 */
+  66               	/* stack size = 0 */
+  67               	.L__stack_usage = 0
+  62:gauges.c      **** 	TCCR1B &= ~(1 << CS12);		// Disconnect Timer from clock
+  68               		.loc 1 62 0
+  69 0036 8EB5      		in r24,0x2e
+  70 0038 8B7F      		andi r24,lo8(-5)
+  71 003a 8EBD      		out 0x2e,r24
+  63:gauges.c      **** 	PORTB &= ~(1 << PB5);		// Set Pin to low
+  72               		.loc 1 63 0
+  73 003c C598      		cbi 0x18,5
+  74 003e 0895      		ret
+  75               		.cfi_endproc
+  76               	.LFE5:
+  78               	.global	gauge_tacho_off
+  80               	gauge_tacho_off:
+  81               	.LFB6:
+  64:gauges.c      **** }
+  65:gauges.c      **** 
+  66:gauges.c      **** 
+  67:gauges.c      **** void gauge_tacho_off (void)
+  68:gauges.c      **** {
+  82               		.loc 1 68 0
+  83               		.cfi_startproc
+  84               	/* prologue: function */
+  85               	/* frame size = 0 */
+  86               	/* stack size = 0 */
+  87               	.L__stack_usage = 0
+  69:gauges.c      **** 	TCCR3B &= ~(1 << CS32);
+  88               		.loc 1 69 0
+  89 0040 EAE8      		ldi r30,lo8(-118)
+  90 0042 F0E0      		ldi r31,0
+  91 0044 8081      		ld r24,Z
+  92 0046 8B7F      		andi r24,lo8(-5)
+  93 0048 8083      		st Z,r24
+  70:gauges.c      **** 	PORTE &= ~(1 << PE3);		// Set Pin to low
+  94               		.loc 1 70 0
+  95 004a 1B98      		cbi 0x3,3
+  96 004c 0895      		ret
+  97               		.cfi_endproc
+  98               	.LFE6:
+ 100               	.global	gauge_speedo_on
+ 102               	gauge_speedo_on:
+ 103               	.LFB7:
+  71:gauges.c      **** }
+  72:gauges.c      **** 
+  73:gauges.c      **** 
+  74:gauges.c      **** void gauge_speedo_on (void)
+  75:gauges.c      **** {
+ 104               		.loc 1 75 0
+ 105               		.cfi_startproc
+ 106               	/* prologue: function */
+ 107               	/* frame size = 0 */
+ 108               	/* stack size = 0 */
+ 109               	.L__stack_usage = 0
+  76:gauges.c      **** 	TCCR1B |= (1 << CS12);		// Connect Timer1, set prescaler to ...
+ 110               		.loc 1 76 0
+ 111 004e 8EB5      		in r24,0x2e
+ 112 0050 8460      		ori r24,lo8(4)
+ 113 0052 8EBD      		out 0x2e,r24
+ 114 0054 0895      		ret
+ 115               		.cfi_endproc
+ 116               	.LFE7:
+ 118               	.global	gauge_tacho_on
+ 120               	gauge_tacho_on:
+ 121               	.LFB8:
+  77:gauges.c      **** }
+  78:gauges.c      **** 
+  79:gauges.c      **** 
+  80:gauges.c      **** void gauge_tacho_on (void)
+  81:gauges.c      **** {
+ 122               		.loc 1 81 0
+ 123               		.cfi_startproc
+ 124               	/* prologue: function */
+ 125               	/* frame size = 0 */
+ 126               	/* stack size = 0 */
+ 127               	.L__stack_usage = 0
+  82:gauges.c      **** 	TCCR3B |= (1 << CS32);		// Connect Timer3, set prescaler to ...
+ 128               		.loc 1 82 0
+ 129 0056 EAE8      		ldi r30,lo8(-118)
+ 130 0058 F0E0      		ldi r31,0
+ 131 005a 8081      		ld r24,Z
+ 132 005c 8460      		ori r24,lo8(4)
+ 133 005e 8083      		st Z,r24
+ 134 0060 0895      		ret
+ 135               		.cfi_endproc
+ 136               	.LFE8:
+ 138               	.Letext0:
+ 139               		.file 2 "/usr/lib/avr/include/stdint.h"
+ 140               		.file 3 "include/timer.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 gauges.c
+     /tmp/cc9k4bBH.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc9k4bBH.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc9k4bBH.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc9k4bBH.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cc9k4bBH.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc9k4bBH.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc9k4bBH.s:13     .text:0000000000000000 gauges_init
+     /tmp/cc9k4bBH.s:60     .text:0000000000000036 gauge_speedo_off
+     /tmp/cc9k4bBH.s:80     .text:0000000000000040 gauge_tacho_off
+     /tmp/cc9k4bBH.s:102    .text:000000000000004e gauge_speedo_on
+     /tmp/cc9k4bBH.s:120    .text:0000000000000056 gauge_tacho_on
+
+NO UNDEFINED SYMBOLS
