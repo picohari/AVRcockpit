@@ -11,7 +11,7 @@ Licensed under the GPL license, see LICENCE for details.
 All text above must be included in any redistribution.
 
 
-
+```
          __      __  _____
     /\   \ \    / / |  __ \			   __         _ __
    /  \   \ \  / /  | |__) |	  _________  _____/ /  ____  (_) /_
@@ -19,7 +19,7 @@ All text above must be included in any redistribution.
  / ____ \   \  /    | | \ \	/ /__/ /_/ / /__/ ,< / /_/ / / /_
 /_/    \_\   \/     |_|  \_\	\___/\____/\___/_/|_/ .___/_/\__/
 			                           /_/
-
+```
 
 # Introduction
 This project is intended to provide the link between a car racing simulator and your
@@ -74,6 +74,7 @@ VALUE is the value itself coded as TYPE (byte representation of the variable)
 
 The data transmission starts like with the first tuple of data:
 
+```
 STX | NR | RS | WHAT | TYPE | VALUE 		: Recors items / single data stream packet
   1 |  2 |  1 |    2 |    1 |  variable 	: bytes length
 
@@ -88,7 +89,7 @@ If no more tuples follow, then we terminate with:
 
 | ETX
 
-
+```
 
 
 
